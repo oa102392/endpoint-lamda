@@ -3,49 +3,99 @@ const chaiHttp = require('chai-http');
 const { expect } = chai;
 chai.use(chaiHttp);
 
-const app = require('../path/to/your/app'); // Update with the correct path to your app
+const app = require('../path/to/your/app'); // Adjust this to the actual path
 
-// Group tests for GET /api/get_vessel_name endpoint
-describe('GET /api/get_vessel_name', () => {
-    // Test successful retrieval of vessel name for valid numVesselID
-    it('should return the vessel name for a valid numVesselID', async () => {
-        const numVesselID = 1;
-        const res = await chai.request(app).get(`/api/get_vessel_name?numVesselID=${numVesselID}`);
-
-        // Check response status and body
+// Test suite for POST /api/visualize_waypoints
+describe('POST /api/visualize_waypoints', () => {
+    // Test with default filters
+    it('should return all waypoints for default filters', async () => {
+        const requestBody = {
+            "vessel": "All Vessels of Interest",
+            "source": "All Sources",
+            "distress": ["All Natures of Distress"],
+            "startDate": 1670966010705,
+            "endDate": 1702502010705
+        };
+        
+        const res = await chai.request(app).post('/api/visualize_waypoints').send(requestBody);
+        
         expect(res).to.have.status(200);
-        expect(res.body).to.be.an('object');
-        expect(res.body).to.have.property('txtVesselName', 'OCEAN MARINER');
+        expect(res.body).to.be.an('array');
     });
 
-    // Test response for invalid numVesselID
-    it('should return an error for an invalid numVesselID', async () => {
-        const invalidID = 'invalid_id';
-        const res = await chai.request(app).get(`/api/get_vessel_name?numVesselID=${invalidID}`);
+    // Test for specific vessel filter
+    it('should filter waypoints by a specific vessel', async () => {
+        const requestBody = {
+            "vessel": "303304000", // Assuming this is a valid vessel MMSI
+            "source": "All Sources",
+            "distress": ["All Natures of Distress"],
+            "startDate": 1670966010705,
+            "endDate": 1702502010705
+        };
+        
+        const res = await chai.request(app).post('/api/visualize_waypoints').send(requestBody);
+        
+        expect(res).to.have.status(200);
+        expect(res.body).to.satisfy((waypoints) => waypoints.every(wp => wp.txtMMSI === "303304000"));
+    });
 
-        // Check for error status and error message
-        expect(res).to.have.status(400); // Adjust the status code based on your error handling
+    // Test for specific source filter
+    it('should filter waypoints by a specific source', async () => {
+        const requestBody = {
+            "vessel": "All Vessels of Interest",
+            "source": "Iridium Constellation", // Assuming this is a valid source
+            "distress": ["All Natures of Distress"],
+            "startDate": 1670966010705,
+            "endDate": 1702502010705
+        };
+        
+        const res = await chai.request(app).post('/api/visualize_waypoints').send(requestBody);
+        
+        expect(res).to.have.status(200);
+        expect(res.body).to.satisfy((waypoints) => waypoints.every(wp => wp.txtSourceName === "Iridium Constellation"));
+    });
+
+    // Test for specific distress filter
+    it('should filter waypoints by a specific nature of distress', async () => {
+        const requestBody = {
+            "vessel": "All Vessels of Interest",
+            "source": "All Sources",
+            "distress": ["Fire, explosion"], // Assuming this is a valid distress type
+            "startDate": 1670966010705,
+            "endDate": 1702502010705
+        };
+        
+        const res = await chai.request(app).post('/api/visualize_waypoints').send(requestBody);
+        
+        expect(res).to.have.status(200);
+        expect(res.body).to.satisfy((waypoints) => waypoints.every(wp => wp.txtNatureOfDistress === "Fire, explosion"));
+    });
+
+    // Test for handling invalid date range
+    it('should return an error for an invalid date range', async () => {
+        const requestBody = {
+            "vessel": "All Vessels of Interest",
+            "source": "All Sources",
+            "distress": ["All Natures of Distress"],
+            "startDate": 1702502010705, // End date before start date
+            "endDate": 1670966010705
+        };
+        
+        const res = await chai.request(app).post('/api/visualize_waypoints').send(requestBody);
+        
+        expect(res).to.have.status(400); // Assuming your API validates date ranges and returns 400 for invalid ranges
         expect(res.body).to.have.property('error');
     });
 
-    // Test response when numVesselID is missing from the query
-    it('should return an error when numVesselID is missing', async () => {
-        const res = await chai.request(app).get('/api/get_vessel_name');
-
-        // Check for error status and error message
-        expect(res).to.have.status(400); // Adjust the status code based on your error handling
+    // Test for missing body parameters (assuming API requires all parameters)
+    it('should return an error when required body parameters are missing', async () => {
+        const requestBody = {}; // Missing all parameters
+        
+        const res = await chai.request(app).post('/api/visualize_waypoints').send(requestBody);
+        
+        expect(res).to.have.status(400); // Assuming your API checks for required parameters and returns 400 if missing
         expect(res.body).to.have.property('error');
     });
 
-    // Test response for non-existent vessel
-    it('should return an error if the vessel is not found', async () => {
-        const nonExistentID = 9999;
-        const res = await chai.request(app).get(`/api/get_vessel_name?numVesselID=${nonExistentID}`);
-
-        // Check for not found status and error message
-        expect(res).to.have.status(404);
-        expect(res.body).to.have.property('error', 'Vessel not found');
-    });
-
-    // Additional tests can be added here for other scenarios
+    // Additional test scenarios can include more specific cases as needed
 });
