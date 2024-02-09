@@ -21,3 +21,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Switch back to the airflow user
 USER airflow
+
+
+RUN sed -i 's/https:\/\/deb.debian.org/http:\/\/deb.debian.org/g' /etc/apt/sources.list \
+ && apt-get update \
+ && apt-get install -y openssl \
+ # Revert back to HTTPS repositories after installation
+ && sed -i 's/http:\/\/deb.debian.org/https:\/\/deb.debian.org/g' /etc/apt/sources.list
