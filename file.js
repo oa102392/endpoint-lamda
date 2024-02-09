@@ -28,3 +28,11 @@ RUN sed -i 's/https:\/\/deb.debian.org/http:\/\/deb.debian.org/g' /etc/apt/sourc
  && apt-get install -y openssl \
  # Revert back to HTTPS repositories after installation
  && sed -i 's/http:\/\/deb.debian.org/https:\/\/deb.debian.org/g' /etc/apt/sources.list
+
+
+ # Configure OpenSSL for FIPS mode (Example for OpenSSL 3.0)
+# Create or modify the OpenSSL configuration file to enable FIPS mode
+RUN echo "[openssl_init]\nproviders = provider_sect\n\n[provider_sect]\ndefault = default_sect\nfips = fips_sect\n\n[default_sect]\nactivate = 1\n\n[fips_sect]\nactivate = 1" > /etc/ssl/openssl.cnf
+
+# For OpenSSL 1.0.2, you might need to set environment variables like so:
+# ENV OPENSSL_FIPS=1
