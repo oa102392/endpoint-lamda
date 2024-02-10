@@ -36,3 +36,81 @@ RUN echo "[openssl_init]\nproviders = provider_sect\n\n[provider_sect]\ndefault 
 
 # For OpenSSL 1.0.2, you might need to set environment variables like so:
 # ENV OPENSSL_FIPS=1
+
+# Copy your custom Python script into the container
+COPY configure_fips_caching.py /tmp/configure_fips_caching.py
+
+# Execute the script to modify app.py for FIPS-compliant caching
+RUN python /tmp/configure_fips_caching.py
+
+
+import hashlib
+from tempfile import gettempdir
+from pathlib import Path
+
+# Path to Airflow's app.py or the appropriate file to modify
+app_py_path = Path('/home/airflow/.local/lib/python3.11/site-packages/airflow/www/app.py')
+
+# Read the content of app.py
+content = app_py_path.read_text()
+
+# Place to insert the cache configuration
+insert_point = "from flask import Flask"
+
+# Cache configuration with FIPS-compliant modifications
+cache_config = '''
+import hashlib
+from flask_caching import Cache
+cache_config = {
+    'CACHE_TYPE': 'flask_caching.backends.filesystem',
+    'CACHE_DIR': gettempdir(),
+    'CACHE_OPTIONS': {'hash_method': hashlib.sha256}
+}
+Cache(app=flask_app, config=cache_config)
+'''
+
+# Insert the cache configuration after the insert point
+modified_content = content.replace(insert_point, insert_point + cache_config)
+
+# Write the modified content back to app.py
+app_py_path.write_text(modified_content)
+
+
+
+from pathlib import Path
+
+# Define the path to the Airflow app.py file
+app_py_path = Path('/home/airflow/.local/lib/python3.11/site-packages/airflow/www/app.py')
+
+# Define the insertion point and the code to insert
+insertion_point = "flask_app = Flask(__name__)"
+code_to_insert = """
+import hashlib
+from tempfile import gettempdir
+from flask_caching import Cache
+cache_config = {
+    'CACHE_TYPE': 'flask_caching.backends.filesystem',
+    'CACHE_DIR': gettempdir(),
+    'CACHE_OPTIONS': {'hash_method': hashlib.sha256}
+}
+Cache(app=flask_app, config=cache_config)
+"""
+
+# Read the current contents of app.py
+with app_py_path.open('r') as file:
+    content = file.readlines()
+
+# Find the line to insert the new caching configuration after
+index = 0
+for line in content:
+    if insertion_point in line:
+        break
+    index += 1
+
+# Insert the new caching configuration code
+content.insert(index + 1, code_to_insert)
+
+# Write the modified content back to app.py
+app_py_path.write_text(''.join(content))
+
+
