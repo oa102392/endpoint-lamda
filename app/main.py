@@ -113,3 +113,21 @@ def test_deploy():
 
     assert response.status_code == 200
     assert response.json() == {"SIMULATION_ID": "mocked_sim_id", "status": "mocked_status"}
+
+
+    ----------
+
+    from typing import List, Optional, Dict
+from fastapi import UploadFile
+
+async def do_deployment(apps: List[str], framework: str, scenario: str, user_id: Optional[str], scale: Optional[int], zip_file: UploadFile) -> Dict[str, str]:
+    # Placeholder for the actual deployment logic
+    # Here you would use apps, framework, scenario, user_id, scale, and the uploaded file as needed
+    # For demonstration, we'll just return a mocked deployment ID and status
+    deployment_id = "123"  # Example: Generate or determine this based on your actual deployment process
+    deployment_status = "success"  # Example: Determine the status of the deployment
+
+    # Example: Log or process the deployment parameters
+    print(f"Deploying with apps: {apps}, framework: {framework}, scenario: {scenario}, user_id: {user_id}, scale: {scale}, file: {zip_file.filename}")
+
+    return {"id": deployment_id, "status": deployment_status}
