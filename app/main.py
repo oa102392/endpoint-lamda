@@ -249,3 +249,46 @@ async def deploy(input: str = Depends(), zip_file: UploadFile = File(...)):
     status = "success"
 
     return DeployResponse(SIMULATION_ID=simulation_id, status=status)
+
+
+
+-----------
+
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from app.models.deployment import DeployRequest, DeployResponse
+from app.deployment.deploy import do_deployment
+import json
+
+router = APIRouter()
+
+@router.post("/deploy", response_model=DeployResponse)
+async def deploy(input: str = Depends(), zip_file: UploadFile = File(...)):
+    try:
+        # Parse the input JSON string into a dictionary
+        input_data = json.loads(input)
+        # Convert the dictionary to a DeployRequest model
+        deploy_request = DeployRequest(**input_data)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=422, detail="Invalid JSON format in input")
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=f"Validation error: {e.errors()}")
+
+    # Now that deploy_request is a validated DeployRequest instance, use its data in do_deployment
+    try:
+        results = await do_deployment(
+            apps=deploy_request.apps, 
+            framework=deploy_request.framework, 
+            scenario=deploy_request.scenario, 
+            user_id=deploy_request.user_id, 
+            scale=deploy_request.scale, 
+            zip_file=zip_file
+        )
+    except Exception as e:  # Catch specific exceptions related to deployment failures
+        raise HTTPException(status_code=500, detail=f"Deployment failed: {str(e)}")
+
+    # Assuming results contains simulation_id and status
+    simulation_id = results.get("id")
+    status = results.get("status")
+
+    return DeployResponse(SIMULATION_ID=simulation_id, status=status)
+
