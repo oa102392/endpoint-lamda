@@ -217,3 +217,35 @@ async def deploy(request: DeployRequest = Depends(), zip_file: UploadFile = File
 
     # Return the deployment response
     return {"SIMULATION_ID": simulation_id, "status": status}
+----
+
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+import json
+
+router = APIRouter()
+
+@router.post("/deploy", response_model=DeployResponse)
+async def deploy(input: str = Depends(), zip_file: UploadFile = File(...)):
+    try:
+        # Parse the input JSON string into a dictionary
+        input_data = json.loads(input)
+        # Convert the dictionary to a DeployRequest model
+        deploy_request = DeployRequest(**input_data)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=422, detail="Invalid JSON format in input")
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=f"Validation error: {e.errors()}")
+
+    # Use deploy_request for further processing
+    # Example: Extract data from deploy_request
+    apps = deploy_request.apps
+    framework = deploy_request.framework
+    scenario = deploy_request.scenario
+    user_id = deploy_request.user_id
+    scale = deploy_request.scale
+
+    # Placeholder for your deployment logic
+    simulation_id = "example_simulation_id"
+    status = "success"
+
+    return DeployResponse(SIMULATION_ID=simulation_id, status=status)
