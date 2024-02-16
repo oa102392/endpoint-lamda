@@ -155,3 +155,35 @@ class DeployRequest(BaseModel):
         # If parsing is successful, return the original JSON string
         return v
 
+-------------
+from pydantic import BaseModel, validator, ValidationError
+from typing import List, Optional
+import json
+
+class DeploymentInput(BaseModel):
+    apps: List[str]
+    framework: str
+    scenario: str
+    user_id: Optional[str] = None  
+    scale: Optional[int] = None  
+
+class DeployRequest(BaseModel):
+    input: str  # Raw JSON string
+    parsed_input: DeploymentInput = None  # Add this line
+
+    @validator('input', pre=True)
+    def validate_and_parse_input(cls, v):
+        try:
+            # Attempt to parse the input string into a DeploymentInput model
+            parsed = DeploymentInput.parse_raw(v)
+        except ValidationError as e:
+            # If parsing fails, raise a validation error
+            raise ValueError(f"Invalid input for DeploymentInput: {e}")
+        # If parsing is successful, return the parsed DeploymentInput instance
+        return parsed
+
+    @validator('parsed_input', pre=True, always=True)
+    def set_parsed_input(cls, v, values):
+        if 'input' in values:
+            return DeploymentInput.parse_raw(values['input'])
+        raise ValueError("Input not provided")
