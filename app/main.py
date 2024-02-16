@@ -64,6 +64,10 @@ class DeployRequest(BaseModel):
         except json.JSONDecodeError:
             raise ValueError("Invalid JSON format in 'input' field")
 
+class DeployResponse(BaseModel):
+    SIMULATION_ID:str
+    status:str
+
 
 
 routers/deployments.py---------
@@ -117,6 +121,8 @@ def test_deploy():
 
     ----------
 
+    app/deployment/deploy.py
+
     from typing import List, Optional, Dict
 from fastapi import UploadFile
 
@@ -131,3 +137,57 @@ async def do_deployment(apps: List[str], framework: str, scenario: str, user_id:
     print(f"Deploying with apps: {apps}, framework: {framework}, scenario: {scenario}, user_id: {user_id}, scale: {scale}, file: {zip_file.filename}")
 
     return {"id": deployment_id, "status": deployment_status}
+
+
+----------------
+
+from typing import List, Optional
+from pydantic import BaseModel, validator, ValidationError
+import json
+
+class DeploymentInput(BaseModel):
+    apps: List[str]
+    framework: str
+    scenario: str
+    user_id: Optional[str] = None  
+    scale: Optional[int] = None  
+
+class DeployRequest(BaseModel):
+    input: str  # Initially a raw string
+
+    @property
+    def parsed_input(self) -> DeploymentInput:
+        # Preprocess the input to ensure it's a valid JSON string
+        processed_input = self.preprocess_input(self.input)
+        try:
+            input_data = json.loads(processed_input)
+            return DeploymentInput(**input_data)
+        except json.JSONDecodeError:
+            raise ValueError("Processed input is not valid JSON")
+
+    @staticmethod
+    def preprocess_input(raw_input: str) -> str:
+        # Attempt to correct common formatting issues to convert to valid JSON
+        # For example, replacing single quotes with double quotes
+        try:
+            # Assuming the input needs to be evaluated as a Python literal
+            # This is a security risk if input is not controlled; consider safer alternatives
+            processed_input = raw_input.replace("'", '"')
+            # Further processing steps can be added here if necessary
+            return processed_input
+        except Exception as e:
+            raise ValueError(f"Error processing input: {str(e)}")
+
+    @validator('input')
+    def validate_input(cls, v):
+        # Try to preprocess and then load the input to validate it's valid JSON
+        processed_input = cls.preprocess_input(v)
+        try:
+            json.loads(processed_input)
+            return v
+        except json.JSONDecodeError:
+            raise ValueError("Input cannot be processed into valid JSON")
+
+class DeployResponse(BaseModel):
+    SIMULATION_ID: str
+    status: str
