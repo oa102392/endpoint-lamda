@@ -187,3 +187,33 @@ class DeployRequest(BaseModel):
         if 'input' in values:
             return DeploymentInput.parse_raw(values['input'])
         raise ValueError("Input not provided")
+    
+
+
+    ----
+
+
+
+    @router.post("/deploy", response_model=DeployResponse)
+async def deploy(request: DeployRequest = Depends(), zip_file: UploadFile = File(...)):
+    try:
+        # Parse the input JSON string into a DeploymentInput instance
+        deployment_input = DeploymentInput.parse_raw(request.input)
+    except ValidationError as e:
+        # If parsing or validation fails, return an HTTP 422 error
+        raise HTTPException(status_code=422, detail=f"Error parsing deployment input: {e.errors()}")
+
+    # Proceed with the deployment using the parsed DeploymentInput instance
+    results = await do_deployment(
+        apps=deployment_input.apps, 
+        framework=deployment_input.framework, 
+        scenario=deployment_input.scenario, 
+        user_id=deployment_input.user_id, 
+        scale=deployment_input.scale, 
+        zip_file=zip_file
+    )
+    simulation_id = results["id"]
+    status = results["status"]
+
+    # Return the deployment response
+    return {"SIMULATION_ID": simulation_id, "status": status}
