@@ -1,0 +1,22 @@
+You can indeed track users using JWT stored in cookies, but it's important to understand the characteristics of this approach and what "tracking" entails in this context.
+
+JWT and User Tracking
+When you use JWTs stored in cookies for authentication, each request from a client includes the JWT, which the server verifies. Here's how tracking works in this scenario:
+
+Statelessness: JWT is self-contained and carries all necessary information about the user, which the server uses to authenticate and potentially authorize the request without needing to retrieve user session data from a database or memory store. This is the essence of statelessness—each request is independent.
+
+User Identification: The JWT typically includes a payload with claims about the user, such as a user ID, roles, and other attributes. When a request is made, the server decodes the JWT to identify the user and make authorization decisions based on the claims within the token.
+
+Tracking User Activity
+If by "tracking," you mean monitoring user activities or maintaining state across requests (like tracking a user's progress through a form or a multi-step process within your application), you can still achieve this with JWTs by:
+
+Storing Activity State in the Client: For purely client-side activities, store progress in the client's local storage or in the state of your frontend application (e.g., a React state).
+
+Sending State with Requests: For server-side tracking, include relevant state information in your requests from the client to the server. The server can then process this information as needed, potentially logging activities or making decisions based on the state included with the request.
+
+Advantages and Considerations
+Scalability and Simplicity: This approach scales well because it reduces the server's workload in managing session states. It fits well with microservices architectures and serverless computing, where applications might run across many distributed nodes.
+
+Security Considerations: Ensure the JWT is securely transmitted and stored. Use HTTPS to prevent interception of the token, and set the HttpOnly and Secure flags on cookies to mitigate the risk of client-side script access and interception.
+
+Data Freshness: Since JWTs are stateless, the information within the token remains static until it expires. If you need to reflect changes in user permissions or other attributes during an active session, you might need mechanisms to invalidate the current token and issue a new one with updated claims.
