@@ -170,3 +170,54 @@ async def test_deployment():
     stored_document = store_one.call_args[0][0]
     assert stored_document["simulation_id"] == "unique-sim-id"
     assert stored_document["user_id"] == "user123"
+
+
+
+import pytest
+from unittest.mock import AsyncMock, patch
+from fastapi import UploadFile
+from io import BytesIO
+
+# Assuming your deployment function is in deploy.py
+from deploy import deployment
+
+@pytest.mark.asyncio
+async def test_deployment():
+    # Patch the necessary functions to avoid actual external calls
+    with patch('app.processors.get_sim_id.get_sim_id', new_callable=AsyncMock) as mock_get_sim_id, \
+         patch('app.workflow.workflow.send', new_callable=AsyncMock) as mock_send, \
+         patch('app.workflow.datastore.store_one', new_callable=AsyncMock) as mock_store_one:
+        
+        # Setup mocks
+        mock_get_sim_id.return_value = "unique-sim-id"
+        mock_send.return_value = {"status": "message sent"}
+        mock_store_one.return_value = "mongo-id"
+
+        # Create a mock UploadFile
+        file_content = b"dummy data"
+        zip_file = UploadFile(filename="test.zip", file=BytesIO(file_content))
+
+        # Call the deployment function
+        result = await deployment(
+            app=["app1", "app2"],
+            framework="test-framework",
+            scenario="test-scenario",
+            user_id="user123",
+            scale=10,
+            zip_file=zip_file
+        )
+
+        # Asserts to check if the results are as expected
+        assert result["simulation_id"] == "unique-sim-id"
+        assert result["status"] == "Deployment initiated successfully"
+        assert result["workflow_message_sent"]["status"] == "message sent"
+        assert result["mongo_store_result"] == "mongo-id"
+
+        # Check if the mocks were called correctly
+        mock_send.assert_called_once()
+        mock_store_one.assert_called_once()
+
+        # Check the contents of the call to store_one
+        stored_document = mock_store_one.call_args[0][0]
+        assert stored_document["simulation_id"] == "unique-sim-id"
+        assert stored_document["user_id"] == "user123"
