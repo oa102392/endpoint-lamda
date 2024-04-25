@@ -235,3 +235,14 @@ async def test_deployment():
             'topic_partition': 'deployment_topic-1'
         }
         mock_store_one.return_value = "mongo-id"
+
+
+
+        mock_send.assert_called_once_with(AsyncMock(return_value={
+            'timestamp': 123456789,
+            'timestamp_type': 'create_time',
+            'offset': 0,
+            'partition': 1,
+            'topic': 'deployment_topic',
+            'topic_partition': 'deployment_topic-1'
+        }))
