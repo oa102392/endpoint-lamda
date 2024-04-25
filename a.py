@@ -221,3 +221,17 @@ async def test_deployment():
         stored_document = mock_store_one.call_args[0][0]
         assert stored_document["simulation_id"] == "unique-sim-id"
         assert stored_document["user_id"] == "user123"
+
+
+
+        # Define the return values for the mocks
+        mock_get_sim_id.return_value = "unique-sim-id"
+        mock_send.return_value = {
+            'timestamp': 123456789,
+            'timestamp_type': 'create_time',
+            'offset': 0,
+            'partition': 1,
+            'topic': 'deployment_topic',
+            'topic_partition': 'deployment_topic-1'
+        }
+        mock_store_one.return_value = "mongo-id"
