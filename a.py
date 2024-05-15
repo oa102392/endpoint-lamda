@@ -246,3 +246,42 @@ async def test_deployment():
             'topic': 'deployment_topic',
             'topic_partition': 'deployment_topic-1'
         }))
+
+
+@pytest.mark.asyncio
+async def test_start_and_stop_enabled(caplog):
+    #Mock the faust app
+
+    with patch("app.workflow.get_workflow", return_value=mocked_app):
+        settings.workflow_enabled=True
+        await workflow.start()
+
+
+
+def decode(message_file):
+    with open(message_file, 'r') as file:
+        lines = file.readlines()
+    
+    number_word_map = {}
+    for line in lines:
+        number, word = line.strip().split(' ', 1)
+        number_word_map[int(number)] = word
+    
+   
+    current = 1
+    i = 1
+    pyramid_numbers = []
+    while current in number_word_map:
+        pyramid_numbers.append(current)
+        current += i
+        i += 1
+    
+    message = ' '.join(number_word_map[num] for num in pyramid_numbers)
+    
+    return message
+
+# Example usage:
+filename = 'input.txt'  # Replace 'input.txt' with the path to your actual file
+decoded_message = decode_message_file(filename)
+print(decoded_message)
+

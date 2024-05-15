@@ -1,79 +1,76 @@
-You can indeed track users using JWT stored in cookies, but it's important to understand the characteristics of this approach and what "tracking" entails in this context.
 
-JWT and User Tracking
-When you use JWTs stored in cookies for authentication, each request from a client includes the JWT, which the server verifies. Here's how tracking works in this scenario:
+“Continous tech and profess dev
 
-Statelessness: JWT is self-contained and carries all necessary information about the user, which the server uses to authenticate and potentially authorize the request without needing to retrieve user session data from a database or memory store. This is the essence of statelessness—each request is independent.
-
-User Identification: The JWT typically includes a payload with claims about the user, such as a user ID, roles, and other attributes. When a request is made, the server decodes the JWT to identify the user and make authorization decisions based on the claims within the token.
-
-Tracking User Activity
-If by "tracking," you mean monitoring user activities or maintaining state across requests (like tracking a user's progress through a form or a multi-step process within your application), you can still achieve this with JWTs by:
-
-Storing Activity State in the Client: For purely client-side activities, store progress in the client's local storage or in the state of your frontend application (e.g., a React state).
-
-Sending State with Requests: For server-side tracking, include relevant state information in your requests from the client to the server. The server can then process this information as needed, potentially logging activities or making decisions based on the state included with the request.
-
-Advantages and Considerations
-Scalability and Simplicity: This approach scales well because it reduces the server's workload in managing session states. It fits well with microservices architectures and serverless computing, where applications might run across many distributed nodes.
-
-Security Considerations: Ensure the JWT is securely transmitted and stored. Use HTTPS to prevent interception of the token, and set the HttpOnly and Secure flags on cookies to mitigate the risk of client-side script access and interception.
-
-Data Freshness: Since JWTs are stateless, the information within the token remains static until it expires. If you need to reflect changes in user permissions or other attributes during an active session, you might need mechanisms to invalidate the current token and issue a new one with updated claims.
+Goal: Advancing Search and Rescue Operations through the Development of the RASP Data Visualization Tool, Leveraging Cloud-Based Innovation and Fostering Active Collaboration with the U.S. Coast Guard and Department of Homeland Security
 
 
+The RASP project, short for "Rescue 21 Augmentation From Space," is a collaborative effort with the U.S. Coast Guard and the Department of Homeland Security aimed at boosting search and rescue capabilities using cloud-native technology. It focuses on developing a data visualization tool for displaying Digital Selective Calling (DSC) signals, essential for coordinating rescue missions. RASP seeks to enhance mission efficiency and success by integrating advanced technology into rescue operations.
 
-User Authentication with Passport Local Strategy
-Login Request: When a user submits their credentials (username and password) through a login form, the Passport Local strategy validates these credentials against the database or any other user store.
+As part of my commitment to continuous technical and professional development, I will focus on leveraging my expertise to mentor an associate member of technical staff on the key project, RASP. This will involve guiding them in enhancing their contributions to the codebase through effective coding practices, conducting thorough code reviews, and providing constructive feedback. I aim to facilitate a culture of learning and sharing by organizing weekly sessions to review demoed updates and discuss improvement areas. In addition, I aim to host a Tech Talk to discuss the technologies and methods used to develop the RASP data visualization tool such as Node.js, AWS Gov Cloud, AWS Lambda, and Kubernetes.
 
-Session Creation: Upon successful authentication, Passport initiates a session for the user. This involves creating a unique session identifier (session ID) and storing it in a session store, which could be in-memory, a database, Redis, etc.
+I will continue to support and collaborate with the U.S. Coast Guard after the completion and delivery of the RASP tool. My role will involve offering them support and training to maximize the use of the tool’s features. I will actively seek their feedback and use it as a means for the ongoing adaptation and improvement of the tool.
 
-Storing Session ID in Cookies: The server sends the session ID back to the client's browser as a cookie. This cookie is then included automatically by the browser in subsequent requests to the server.
 
-Tracking User Activity
-Session Retrieval: With each request, the server retrieves the session ID from the cookie, looks up the corresponding session in the session store, and re-establishes the session context for the request. This allows the server to recognize the user and maintain state across requests.
-
-Storing User Data: The session can store data related to the user's activities. For example, you might track the user's navigation path, store items in a shopping cart, or keep form inputs for multi-step processes. This data is associated with the user's session ID and can be accessed server-side during the session's lifecycle.
-
-Middleware for User Tracking: You can create or use existing middleware in your Node.js application to perform custom tracking of user activities. This might involve logging actions, monitoring user behavior, or applying business logic based on the user's session data.
-
-Advantages and Considerations
-Simplicity: Using sessions with Passport is straightforward and well-supported, making it easy to implement user authentication and activity tracking.
-
-Statefulness: Since the session data is stored server-side, it's inherently stateful. This allows for rich, context-aware applications but requires careful management of session data to ensure performance and scalability.
-
-Security: It's essential to implement security measures to protect session data, including using secure, HTTP-only cookies to prevent access from client-side scripts, implementing CSRF protection, and managing session expiration and invalidation properly.
-
-Scalability: For applications that expect to scale, consider how session data is stored and managed. Using in-memory storage can quickly become a bottleneck. External session stores like Redis are often used to improve scalability and performance in distributed environments.
+My contributions on the RASP project will have a positive impact on Aerospace and extend beyond code development as there will be a focus on mentoring and fostering a culture of continuous improvement. I'll mentor associate staff on the project, guiding them in advanced coding practices and encouraging a learning environment through weekly reviews and a Tech Talk on RASP's technologies like Node.js and AWS Gov Cloud. Post-delivery, I'll ensure the U.S. Coast Guard maximizes the RASP tool's benefits, offering support, and training, and incorporating their feedback for ongoing enhancements.
 
 
 
 
 
-Tracking users and managing sessions with JWTs (JSON Web Tokens) stored in cookies combines the stateless nature of JWT authentication with the convenience of browser-based cookie storage. This method is particularly useful in applications where you want to maintain a user's authenticated state across requests without server-side session storage. Here's an in-depth look at how it works:
 
-User Authentication and JWT Issuance
-Login Request: The user submits their credentials (such as username and password) through a login form. The server validates these credentials against its user store.
 
-JWT Creation: Upon successful authentication, the server generates a JWT. This token includes claims about the user, such as their ID, roles, and possibly other attributes, and is signed by the server to prevent tampering.
 
-Sending JWT in a Cookie: The server sends the JWT back to the client's browser inside a secure, HTTP-only cookie. This means the cookie is automatically included in subsequent requests to the server but is not accessible via JavaScript, mitigating certain types of attacks (like XSS).
 
-Tracking User Activity with JWT
-Stateless Authentication: For each request made by the client, the server extracts the JWT from the cookie, verifies its signature to ensure it hasn't been tampered with, and reads the user's claims from the token. This process authenticates the user without needing to look up a session in a database, making each request stateless from the server's perspective.
 
-User Context: Although JWT authentication is stateless, the server can use the information encoded in the token (like user ID or roles) to fetch user-specific data from a database or cache as needed. This allows the application to provide a personalized user experience (such as user-specific content or settings) without maintaining session state on the server.
 
-Activity Tracking: Tracking user activities (e.g., page views, actions taken) can be done by logging these activities along with the user identifier extracted from the JWT on the server-side. For more interactive or real-time tracking (such as monitoring items in a shopping cart), the application can send this data along with the JWT in request headers or the request body, and the server processes it accordingly.
 
-Advantages and Considerations
-Scalability and Performance: Since authentication is stateless, the server doesn't need to perform session lookups, which can reduce database load and improve scalability.
 
-Cross-Domain and Microservices Friendly: JWTs work well in environments with multiple domains or microservices, as the token can be validated by any service that shares the secret key or has access to the public key for verification.
 
-Security Practices: Secure transmission and storage of the JWT are crucial. Use HTTPS to prevent token interception, and set cookies as secure and HTTP-only. Consider token expiration and renewal strategies to handle token expiry gracefully.
 
-Token Revocation: One challenge with JWTs is revoking tokens before they expire, which requires additional mechanisms (like a token denylist) if immediate revocation is necessary (e.g., user logout or account suspension).
 
-Conclusion
-Using JWTs stored in cookies for authentication and user tracking is a powerful approach that combines the security and client-side ease of cookies with the scalability and statelessness of JWTs. It suits applications requiring robust, scalable user authentication, especially in distributed systems or microservices architectures. Implementing this strategy requires careful attention to security practices, token management, and application architecture to fully leverage its benefits while mitigating potential risks.
+
+
+Technical Excellence 
+
+Goal: Technical Excellence through knowledge sharing and management of Cloud-Based Workflow Automation in the CAMP Project
+
+The Continuous Architecture Management Pipeline (CAMP) project applies software development and project management best practices to engineering data and analysis workflows. CAMP introduces a new capability that streamlines and enhances the analytical processes at Aerospace and sets a new standard for how projects are managed and executed within the organization.
+
+In my role as the implementation developer for Airflow for the CAMP project, I am tasked with driving technical excellence through the implementation of cloud-based workflow automation. This involves setting up Apache Airflow on E3 to automate and orchestrate engineering workflows. 
+
+The key contributions on my efforts on the CAMP project will aim at educating and documenting on how to stand up, maintain, and utilize Apache Airflow on E3. Creating detailed documentation for other members in Aerospace on how to set up, deploy, and mange Apache Airflow on E3 will be a priority. Additionally, documenting lessons learned will provide valuable insight for the future. Framework and resource sharing will be another effort where I will make it available for others in Aerospace to obtain the software framework such as Helm charts, container images, and best practices derived from the project. I will facilitate the reuse of these resources across Aerospace. In addition, I will assist in the management of the workflow automation features that Airflow offers and support in adding features needed by the rest of the CAMP team such as adding SSO authentication, DAG sync and management (workflows), updating of the underlying software and more.
+
+My contributions to the CAMP project will have a positive impact on Aerospace by fulfilling the technical requirements of setting up and managing Apache Airflow but also by incorporating the organization’s commitment to technical excellence. Technical excellence will be achieved by documenting and knowledge sharing of the workflow automation and lessons learned, making framework and resources available to others in Aerospace, and leading the required changes and updates needed to the workflow automation instance the CAMP team will utilize. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Enterprise:
+
+Goal: Driving Enterprise Integration and Mission Success through Workflow Development and Cloud Development with the AWESOME project
+
+The AWESOME (Aerospace Wargame Effectiveness Simulation On Multiplayer Environment) project is a distributed framework that integrates multiple aerospace tools. It facilitates the exchange of over-the-wire data during live simulations, enabling comprehensive enterprise analyses and interactive wargaming. This project represents a significant advancement in how Aerospace conducts simulations and analyses.
+
+As a key developer on the AWESOME project, my role focuses on building workflow automation functionality using Python, FastAPI, Faust, MongoDB, and Kafka. I will assist in the continuous integration and continuous deployment (CI/CD) processes for the AWESOME applications on the cloud by utilizing technologies such as Helm, ArgoCD, Jenkins, and Kubernetes. I will ensure reliable deployment, management, and scaling of AWESOME applications on E3. By working on these areas, I aim to facilitate the successful migration of AWESOME to Aerospace’s cloud provider E3.
+
+My contributions to the AWESOME project will have a positive impact to the Aerospace organization because it will advocate for the adoption of cloud architectures for future development of Aerospace technologies and tools. 
+
+
+
