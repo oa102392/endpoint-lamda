@@ -1,0 +1,18 @@
+webserver:
+  enabled: true
+  env:
+    - name: AIRFLOW__WEBSERVER__AUTH_BACKEND
+      value: "airflow.providers.oauth.auth_backend.oauth"  # This value points to the OAuth backend for Airflow
+    - name: AIRFLOW__WEBSERVER__OAUTH_PROVIDERS
+      value: "[{'name': 'keycloak', 'client_id': '$(CLIENT_ID)', 'client_secret': '$(CLIENT_SECRET)', 'authorize_url': 'https://<your-keycloak-server>/auth/realms/<your-realm>/protocol/openid-connect/auth', 'token_url': 'https://<your-keycloak-server>/auth/realms/<your-realm>/protocol/openid-connect/token', 'userinfo_endpoint': 'https://<your-keycloak-server>/auth/realms/<your-realm>/protocol/openid-connect/userinfo', 'callback_url': 'https://<your-airflow-url>/auth/authorize'}]"
+  extraEnvFrom:
+    - secretRef:
+        name: keycloak-oauth-secrets
+
+secret:
+  - envName: CLIENT_ID
+    secretName: keycloak-oauth-secrets
+    secretKey: client-id
+  - envName: CLIENT_SECRET
+    secretName: keycloak-oauth-secrets
+    secretKey: client-secret
