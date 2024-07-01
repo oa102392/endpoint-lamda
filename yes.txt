@@ -1,1 +1,60 @@
-.
+DSC Data Source
+
+The "DSC Data Source" drop-down menu enables users to choose the specific data source for a selected subset of DSC data. Users can select "All Sources" to view DSC data from all available sources or choose a specific data source. Additionally, users can search for a particular data source available using the search box above the selection options.
+
+Vessels of Interest
+
+The "Vessel of Interest" drop-down menu allows users to select a specific vessel to view DSC signals related exclusively to that vessel. Users can choose "All Vessels of Interest" to access DSC data for all vessels in the database or select a single vessel of interest. Additionally, users can search for a particular vessel using the search box located above the selection options.
+
+Nature of Distress
+
+The "Nature of Distress" drop-down menu allows users to select a specific distress category for a subset of DSC data. Users can choose "All Natures of Distress" to view data from all distress categories or select a specific one. They also have the option to choose multiple distress categories. Additionally, users can search for a particular distress category using the search box located above the selection options. Users can select all distress categories by clicking on the "Select All" button and can deselect all options using the "Deselect All" button.
+
+District Area Labels On/Off
+
+The "USCG District Area of Operations" filter allows users to specify which USCG district areas they wish to include in their data visualization. The drop-down menu presents a comprehensive list of all available district areas, enabling users to customize their view based on geographic regions of interest.
+Features:
+Selection of Specific Districts: Users can individually select or deselect district areas to focus on specific regions.
+Select All/Deselect All Buttons: The "Select All" button allows users to quickly select all district areas, while the "Deselect All" button enables them to clear all selections at once.
+Default Setting: By default, all district areas are selected when the platform is first accessed. This ensures that users start with a comprehensive view of all available data.
+How to Use:
+Open the Filter: Click on the "USCG District Area of Operations" drop-down menu to view the list of available district areas.
+Select/Deselect Districts: Check or uncheck the boxes next to each district area to include or exclude them from the data visualization.
+Select All/Deselect All: Use the "Select All" button to quickly include all districts, or the "Deselect All" button to remove all selections.
+Visualize Data: After making your selections, click the "Visualize Waypoints" button to update the map with DSC signals filtered by the chosen district areas.
+
+The "District Area Labels On/Off" switch allows users to toggle the visibility of district labels on the map. When the switch is turned on, the names of the various USCG district areas are displayed within their respective polygon areas on the map. This feature helps users easily identify and distinguish between different district areas. When the switch is off, these labels are hidden, providing an unobstructed view of the map's geographic boundaries and features. This function enhances map usability by allowing users to customize the level of detail displayed according to their needs.
+
+Date Range
+
+The "Date Range Selector" allows users to filter DSC data signals based on specific date and time ranges. Users can choose the start and end dates from the calendar interface, which provides an intuitive way to set the desired period. The selector includes options for selecting both the day and precise time enhancing the granularity of the data filtering.
+To apply the selected date range, users must click the "Apply" button. If they wish to cancel their selection, they can click the "Cancel" button. This functionality ensures users can easily refine their data analysis by focusing on relevant time frames, making the data more manageable and meaningful for specific analysis tasks.
+Features:
+Calendar Interface: Provides an easy-to-use calendar for selecting start and end dates.
+Time Selection: Users can specify exact times within the selected dates to narrow down the data further.
+Apply and Cancel Buttons: Ensure users can confirm or discard their date range selections conveniently.
+By using the date range selector, users can effectively manage and analyze the DSC data signals pertinent to their needs,
+
+Visualize:
+The "Visualize Waypoints" button enables users to filter and display DSC signals on the map based on the selected criteria from various drop-down menus. When users click this button, the system gathers the values set in the following filters:
+DSC Data Source
+Vessels of Interest
+Call Types
+Nature of Distress
+Date Range
+After collecting these values, the platform searches the database for DSC signals that match the combined criteria. The relevant DSC signals are then visualized on the map, allowing users to see a graphical representation of the data that meets their specific requirements.
+How to Use:
+Select Filters: Use the drop-down menus to choose specific data sources, vessels of interest, call types, nature of distress, and set the desired date range.
+Click Visualize Waypoints: Press the "Visualize Waypoints" button to apply the selected filters.
+View Results: The map will update to display the DSC signals that match the combined filters, providing a clear visual overview of the relevant data.
+This feature enhances data analysis by allowing users to pinpoint specific DSC signals based on chosen filters and visualize them onto the map.
+
+
+Zoom out
+
+The "Zoom Out & Recenter" button provides a convenient way for users to return to the default view of the map after exploring different areas. This feature is particularly useful for users who wish to freely zoom in and out or pan around the map to examine specific details, but then need to quickly revert to the original, comprehensive view.
+How to Use:
+Interact with the Map: Users can zoom in, zoom out, and pan around the map to explore specific regions and details.
+Revert to Default View: When users want to return to the original map view, they simply click the "Zoom Out & Recenter" button.
+Default View Restoration: The map will automatically zoom out and recenter, displaying the entire geographic area in the default view.
+This button ensures that users can easily navigate and interact with the map without losing their place, providing a seamless and user-friendly experience.
