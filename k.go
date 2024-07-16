@@ -97,3 +97,45 @@ func main() {
 	fmt.Println("Server is listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
+
+from locust import HttpUser, task, between, events
+from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_RUNNING
+from threading import Lock
+
+class SpaceflakeUser(HttpUser):
+    wait_time = between(1, 5)  # Wait time between tasks in seconds
+
+    def on_start(self):
+        self.ids = self.environment.ids
+        self.lock = self.environment.lock
+
+    @task
+    def generate_spaceflake(self):
+        response = self.client.get("/generate", verify=False)
+        if response.status_code == 200:
+            data = response.json()
+            spaceflake_id = data['id']
+            with self.lock:
+                if spaceflake_id in self.ids:
+                    print(f"Duplicate ID found: {spaceflake_id}")
+                self.ids.add(spaceflake_id)
+
+# Initialize shared data structures
+@events.init.add_listener
+def on_locust_init(environment, **_kwargs):
+    environment.ids = set()
+    environment.lock = Lock()
+
+# Print all generated IDs when the test stops
+@events.test_stop.add_listener
+def on_test_stop(environment, **_kwargs):
+    print(f"Total IDs generated: {len(environment.ids)}")
+    # Optional: Write IDs to a file for further analysis
+    with open("generated_ids.txt", "w") as f:
+        for spaceflake_id in environment.ids:
+            f.write(f"{spaceflake_id}\n")
+
+if __name__ == "__main__":
+    import os
+    os.system("locust -f locustfile.py --host=http://localhost:8080")
