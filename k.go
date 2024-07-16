@@ -618,3 +618,48 @@ func main() {
 	fmt.Println("Server is listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
+
+
+------
+
+from locust import HttpUser, task, between, events
+from threading import Lock, Thread
+from queue import Queue
+from datetime import datetime
+
+log_queue = Queue()
+file_lock = Lock()
+
+def log_writer():
+    while True:
+        log_entry = log_queue.get()
+        if log_entry is None:
+            break
+        with file_lock:
+            with open(file_name, "a") as file:
+                file.write(log_entry)
+
+file_name = f"generated_ids_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+log_thread = Thread(target=log_writer)
+log_thread.start()
+
+class SpaceflakeUser(HttpUser):
+    wait_time = between(1, 5)  # Wait time between tasks in seconds
+
+    @task
+    def generate_spaceflake(self):
+        response = self.client.get("/generate", verify=False)
+        if response.status_code == 200:
+            data = response.json()
+            spaceflake_id = data['id']
+            log_queue.put(f"{spaceflake_id}\n")
+
+@events.quitting.add_listener
+def on_locust_quit(environment, **kwargs):
+    log_queue.put(None)
+    log_thread.join()
+
+if __name__ == "__main__":
+    import os
+    os.system("locust -f locustfile.py --host=http://localhost:8080")
