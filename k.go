@@ -340,3 +340,92 @@ func main() {
 	fmt.Println("Server is listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
+
+--------------
+
+
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/kkrypt0nn/spaceflake"
+)
+
+type SpaceflakeResponse struct {
+	ID        string            `json:"id"`
+	Decompose map[string]uint64 `json:"decompose"`
+}
+
+var (
+	mu        sync.Mutex
+	node      *spaceflake.Node
+	sequence  uint64
+	lastTime  uint64
+	baseEpoch uint64 = 1420070400000
+)
+
+func currentTimeMillis() uint64 {
+	return uint64(time.Now().UnixNano() / int64(time.Millisecond))
+}
+
+func generateSpaceflake(w http.ResponseWriter, r *http.Request) {
+	nodeIDStr := os.Getenv("NODE_ID")
+	nodeIDParts := strings.Split(nodeIDStr, "-")
+	nodeID, err := strconv.ParseUint(nodeIDParts[len(nodeIDParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid NODE_ID", http.StatusInternalServerError)
+		return
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if node == nil {
+		node = spaceflake.NewNode(nodeID)
+	}
+
+	worker := node.NewWorker()
+	currentTime := currentTimeMillis()
+
+	if currentTime == lastTime {
+		sequence = (sequence + 1) & 4095
+		if sequence == 0 {
+			for currentTime <= lastTime {
+				currentTime = currentTimeMillis()
+			}
+		}
+	} else {
+		sequence = 0
+		lastTime = currentTime
+	}
+
+	worker.Sequence = sequence
+	sf, err := worker.GenerateSpaceflake()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := SpaceflakeResponse{
+		ID:        sf.StringID(),
+		Decompose: sf.Decompose(),
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func main() {
+	http.HandleFunc("/generate", generateSpaceflake)
+	fmt.Println("Server is listening on port 8080...")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
