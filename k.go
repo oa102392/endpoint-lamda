@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/kkrypt0nn/spaceflake"
 )
@@ -14,7 +17,17 @@ type SpaceflakeResponse struct {
 }
 
 func generateSpaceflake(w http.ResponseWriter, r *http.Request) {
-	node := spaceflake.NewNode(1)
+	// Get the node ID from the environment variable
+	nodeIDStr := os.Getenv("NODE_ID")
+	nodeIDParts := strings.Split(nodeIDStr, "-")
+	nodeID, err := strconv.ParseUint(nodeIDParts[len(nodeIDParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid NODE_ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Create a new node with the parsed node ID
+	node := spaceflake.NewNode(nodeID)
 	worker := node.NewWorker()
 	sf, err := worker.GenerateSpaceflake()
 	if err != nil {
@@ -22,7 +35,7 @@ func generateSpaceflake(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := SpaceflakeResponse{ID: sf.String()}
+	response := SpaceflakeResponse{ID: sf.StringID()}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
