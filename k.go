@@ -173,3 +173,39 @@ def on_locust_init(environment, **_kwargs):
 if __name__ == "__main__":
     import os
     os.system("locust -f locustfile.py --host=http://localhost:8080")
+
+
+	-----
+
+
+from locust import HttpUser, task, between, events
+from threading import Lock
+from datetime import datetime
+
+class SpaceflakeUser(HttpUser):
+	wait_time = between(1, 5)  # Wait time between tasks in seconds
+
+	def on_start(self):
+		# Initialize a lock for file writing
+		self.lock = self.environment.lock
+
+	@task
+	def generate_spaceflake(self):
+		response = self.client.get("/generate", verify=False)
+		if response.status_code == 200:
+			data = response.json()
+			spaceflake_id = data['id']
+			with self.lock:
+				with open(self.environment.file_name, "a") as file:
+					file.write(f"{spaceflake_id}\n")
+
+# Initialize shared lock and create a unique filename
+@events.init.add_listener
+def on_locust_init(environment, **_kwargs):
+	environment.lock = Lock()
+	environment.file_name = f"generated_ids_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+	print(f"IDs will be saved to {environment.file_name}")
+
+if __name__ == "__main__":
+	import os
+	os.system("locust -f locustfile.py --host=http://localhost:8080")
