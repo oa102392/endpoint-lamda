@@ -765,3 +765,118 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+------------else
+
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/kkrypt0nn/spaceflake"
+)
+
+// SpaceflakeResponse represents the response structure for the generated Spaceflake
+type SpaceflakeResponse struct {
+	ID        string            `json:"id"`
+	Decompose map[string]uint64 `json:"decompose"`
+}
+
+// Global variables
+var (
+	mu        sync.Mutex           // Mutex to ensure thread-safe access to shared variables
+	node      *spaceflake.Node     // Node object for generating Spaceflakes
+	sequence  uint64               // Sequence number for the Spaceflake
+	lastTime  uint64               // Timestamp of the last generated Spaceflake
+	baseEpoch uint64 = 1420070400000 // Base epoch time
+	workers   []*spaceflake.Worker // List of worker objects
+	workerIdx int                  // Index to keep track of the current worker
+)
+
+const (
+	numWorkers = 32 // Number of workers per node
+)
+
+// currentTimeMillis returns the current time in milliseconds since the Unix epoch
+func currentTimeMillis() uint64 {
+	return uint64(time.Now().UnixNano() / int64(time.Millisecond))
+}
+
+// generateSpaceflake handles HTTP requests to generate a new Spaceflake
+func generateSpaceflake(w http.ResponseWriter, r *http.Request) {
+	// Get the NODE_ID environment variable
+	nodeIDStr := os.Getenv("NODE_ID")
+	nodeIDParts := strings.Split(nodeIDStr, "-")
+	nodeID, err := strconv.ParseUint(nodeIDParts[len(nodeIDParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid NODE_ID", http.StatusInternalServerError)
+		return
+	}
+
+	mu.Lock() // Lock to ensure thread-safe access
+	defer mu.Unlock()
+
+	// Initialize the node and workers if they haven't been initialized yet
+	if node == nil {
+		node = spaceflake.NewNode(nodeID)
+		for i := 0; i < numWorkers; i++ {
+			worker := node.NewWorker()
+			worker.ID = uint64(i % 32) // Ensure worker ID is within the valid range (0-31)
+			workers = append(workers, worker)
+		}
+	}
+
+	// Get the current worker and update the worker index
+	currentWorker := workers[workerIdx]
+	workerIdx = (workerIdx + 1) % numWorkers
+
+	// Get the current time in milliseconds
+	currentTime := currentTimeMillis()
+
+	// Check if the current time is the same as the last time
+	if currentTime == lastTime {
+		sequence = (sequence + 1) & 4095 // Increment the sequence and wrap around at 4095
+		if sequence == 0 {
+			// If the sequence wrapped around, wait for the next millisecond
+			for currentTime <= lastTime {
+				currentTime = currentTimeMillis()
+			}
+		}
+	} else {
+		// Reset the sequence for the new millisecond
+		sequence = 0
+		lastTime = currentTime
+	}
+
+	// Set the sequence for the current worker
+	currentWorker.Sequence = sequence
+	sf, err := currentWorker.GenerateSpaceflake() // Generate the Spaceflake
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Log the creation of the Spaceflake
+	log.Printf("Spaceflake created: %s, Decompose: %v", sf.StringID(), sf.Decompose())
+
+	// Create the response
+	response := SpaceflakeResponse{
+		ID:        sf.StringID(),
+		Decompose: sf.Decompose(),
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response) // Encode and send the response as JSON
+}
+
+func main() {
+	http.HandleFunc("/generate", generateSpaceflake) // Set up the HTTP handler
+	fmt.Println("Server is listening on port 8080...")
+	log.Fatal(http.ListenAndServe(":8080", nil)) // Start the HTTP server
+}
