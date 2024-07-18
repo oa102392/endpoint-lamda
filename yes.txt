@@ -58,3 +58,54 @@ Interact with the Map: Users can zoom in, zoom out, and pan around the map to ex
 Revert to Default View: When users want to return to the original map view, they simply click the "Zoom Out & Recenter" button.
 Default View Restoration: The map will automatically zoom out and recenter, displaying the entire geographic area in the default view.
 This button ensures that users can easily navigate and interact with the map without losing their place, providing a seamless and user-friendly experience.
+
+Basic Navigation
+The RASP tool offers intuitive navigation tools to help users explore and interact with the map effectively. Here are the key navigation features:
+
+Mouse Click and Drag: Click and hold the left mouse button, then drag to pan around the map. This allows users to move the map view and explore different regions.
+Scroll to Zoom: Use the scroll wheel on your mouse or the scroll gesture on your trackpad to zoom in and out of the map. Scrolling up will zoom in, providing a closer view, while scrolling down will zoom out, offering a broader perspective.
+Zoom In/Out Buttons: The platform may include on-screen buttons for zooming in and out, typically located on the side of the map interface. These buttons provide an alternative method for adjusting the zoom level.
+Zoom Out & Recenter Button: Click this button to quickly return to the default map view. This is useful if you have navigated away from the initial view and want to reset the map position and zoom level.
+Interactive Icons: Click on any DSC signal icon on the map to open an information modal with detailed data about the signal. This feature helps users quickly access important information without leaving the map view.
+Toggle Map Legend: Use the arrow bar on the right side of the map to hide or unhide the map legend. This allows users to manage the display of legend information based on their needs, ensuring an uncluttered map view when necessary.
+These navigation tools are designed to provide a seamless and user-friendly experience, allowing users to easily explore, analyze, and interact with the map data.
+
+DSC Signal Information Modal
+
+Users can click on DSC signals displayed on the map to view detailed information about each signal in an information modal. This modal presents the relevant details in a table format, providing a comprehensive overview of the DSC signal. The information includes the following details:
+
+Source Name: The origin of the signal, indicating the data source.
+MMSI: The Maritime Mobile Service Identity, a unique identifier for the vessel.
+Vessel Name: The name of the vessel associated with the DSC signal.
+Nature of Distress: The type of distress the vessel is experiencing.
+Latitude: The geographical latitude where the signal was received.
+Longitude: The geographical longitude where the signal was received.
+Receiver Time: The exact time the signal was received.
+Mode: The status of the signal, indicating whether it is real or test.
+Call Type: The classification of the call, such as Distress Alert, Routine, and Urgency and Safety.
+This feature allows users to quickly access and review crucial information about each DSC signal, enhancing situational awareness and decision-making capabilities. The modal ensures that all relevant data is easily accessible and presented in a clear and organized manner.
+
+Map Legend
+
+The map legend helps users distinguish between different icons displayed on the map, each representing a different type of distress signal. Here is a breakdown of the icons and their meanings:
+
+Icon: The visual representation of the distress type on the map.
+DSC No.: The numeric code associated with each type of distress signal.
+Nature of Distress: The description of the distress type.
+Legend Details
+108 - Abandoning Ship
+102 - Collision
+104 - Danger of Capsizing
+106 - Disabled and Adrift
+112 - EPIRB Emissions
+100 - Fire / Explosion
+101 - Flooding
+103 - Grounding
+110 - Man Overboard
+109 - Piracy / Armed Robbery
+105 - Sinking
+107 - Undesignated Distress
+Test - Test Signal (represented by a star icon)
+N/A - Tracks (lines connecting distress signals with the same MMSI received within a selected time frame)
+Hide/Unhide Map Legend
+You can hide or unhide the map legend by clicking on the arrow bar located on the right side of the legend. This allows you to manage the display of the legend based on your needs, ensuring a clear and uncluttered view of the map when necessary.
