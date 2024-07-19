@@ -109,3 +109,10 @@ Test - Test Signal (represented by a star icon)
 N/A - Tracks (lines connecting distress signals with the same MMSI received within a selected time frame)
 Hide/Unhide Map Legend
 You can hide or unhide the map legend by clicking on the arrow bar located on the right side of the legend. This allows you to manage the display of the legend based on your needs, ensuring a clear and uncluttered view of the map when necessary.
+
+
+The RASP tool offers a range of interactive features to help users effectively explore and analyze DSC data on the map. Users can easily navigate the map by panning, zooming in and out, and resetting the view to explore different regions effortlessly. By clicking on DSC signals, users can access detailed information about each signal through an information modal, which provides comprehensive details in an organized table format. These features work together to enhance the user's ability to interact with and analyze the data, providing a user-friendly and informative experience.
+
+
+
+The RASP Data Analysis Platform provides an intuitive interface for exploring and analyzing DSC data on an interactive map. The user console on the left allows you to filter data by source, vessel, distress type, district area, and date range. Once filters are set, click "Visualize Waypoints" to display the relevant signals on the map. The "Zoom Out & Recenter" button resets the map to its default view, and the map legend helps interpret different distress icons. You can hide or show the user console and map legend for a clearer view by clicking the arrows. This platform simplifies the process of navigating and understanding DSC data.
