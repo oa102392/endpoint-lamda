@@ -1,118 +1,17 @@
-DSC Data Source
+This diagram illustrates the cloud architecture for the Spaceflake application, showcasing how unique UUIDs are generated and managed across multiple pods within a Kubernetes StatefulSet.
 
-The "DSC Data Source" drop-down menu enables users to choose the specific data source for a selected subset of DSC data. Users can select "All Sources" to view DSC data from all available sources or choose a specific data source. Additionally, users can search for a particular data source available using the search box above the selection options.
+Client: The entry point for API requests that require unique UUIDs.
 
-Vessels of Interest
+Ingress Controller / Load Balancer (nginx): Balances incoming API requests across multiple StatefulSet pods, ensuring even distribution of load.
 
-The "Vessel of Interest" drop-down menu allows users to select a specific vessel to view DSC signals related exclusively to that vessel. Users can choose "All Vessels of Interest" to access DSC data for all vessels in the database or select a single vessel of interest. Additionally, users can search for a particular vessel using the search box located above the selection options.
+StatefulSet Pods: Each pod (spaceflake-statefulset-0, spaceflake-statefulset-1, spaceflake-statefulset-2) is responsible for generating unique UUIDs.
 
-Nature of Distress
+Node: Represents a single server or instance within the pod.
+Session Generator: Manages the generation of UUIDs, cycling through sequence numbers from 0 to 4095.
+Workers: Each pod contains 32 workers (worker 0 to worker 31). Each worker can generate up to 4095 unique UUIDs within a millisecond. When the sequence number and worker count reach their limits, the session generator waits for the next millisecond to continue.
+UUID Generation Capacity: Each pod can generate 131,072 unique UUIDs every millisecond (32 workers x 4096 sequences).
 
-The "Nature of Distress" drop-down menu allows users to select a specific distress category for a subset of DSC data. Users can choose "All Natures of Distress" to view data from all distress categories or select a specific one. They also have the option to choose multiple distress categories. Additionally, users can search for a particular distress category using the search box located above the selection options. Users can select all distress categories by clicking on the "Select All" button and can deselect all options using the "Deselect All" button.
+StatefulSet: A Kubernetes workload API object used to manage stateful applications. Unlike Deployments, StatefulSets maintain a sticky identity for each of their pods. These pods are created from the same specification but are not interchangeable: each has a persistent identifier that it maintains across any rescheduling.
 
-District Area Labels On/Off
-
-The "USCG District Area of Operations" filter allows users to specify which USCG district areas they wish to include in their data visualization. The drop-down menu presents a comprehensive list of all available district areas, enabling users to customize their view based on geographic regions of interest.
-Features:
-Selection of Specific Districts: Users can individually select or deselect district areas to focus on specific regions.
-Select All/Deselect All Buttons: The "Select All" button allows users to quickly select all district areas, while the "Deselect All" button enables them to clear all selections at once.
-Default Setting: By default, all district areas are selected when the platform is first accessed. This ensures that users start with a comprehensive view of all available data.
-How to Use:
-Open the Filter: Click on the "USCG District Area of Operations" drop-down menu to view the list of available district areas.
-Select/Deselect Districts: Check or uncheck the boxes next to each district area to include or exclude them from the data visualization.
-Select All/Deselect All: Use the "Select All" button to quickly include all districts, or the "Deselect All" button to remove all selections.
-Visualize Data: After making your selections, click the "Visualize Waypoints" button to update the map with DSC signals filtered by the chosen district areas.
-
-The "District Area Labels On/Off" switch allows users to toggle the visibility of district labels on the map. When the switch is turned on, the names of the various USCG district areas are displayed within their respective polygon areas on the map. This feature helps users easily identify and distinguish between different district areas. When the switch is off, these labels are hidden, providing an unobstructed view of the map's geographic boundaries and features. This function enhances map usability by allowing users to customize the level of detail displayed according to their needs.
-
-Date Range
-
-The "Date Range Selector" allows users to filter DSC data signals based on specific date and time ranges. Users can choose the start and end dates from the calendar interface, which provides an intuitive way to set the desired period. The selector includes options for selecting both the day and precise time enhancing the granularity of the data filtering.
-To apply the selected date range, users must click the "Apply" button. If they wish to cancel their selection, they can click the "Cancel" button. This functionality ensures users can easily refine their data analysis by focusing on relevant time frames, making the data more manageable and meaningful for specific analysis tasks.
-Features:
-Calendar Interface: Provides an easy-to-use calendar for selecting start and end dates.
-Time Selection: Users can specify exact times within the selected dates to narrow down the data further.
-Apply and Cancel Buttons: Ensure users can confirm or discard their date range selections conveniently.
-By using the date range selector, users can effectively manage and analyze the DSC data signals pertinent to their needs,
-
-Visualize:
-The "Visualize Waypoints" button enables users to filter and display DSC signals on the map based on the selected criteria from various drop-down menus. When users click this button, the system gathers the values set in the following filters:
-DSC Data Source
-Vessels of Interest
-Call Types
-Nature of Distress
-Date Range
-After collecting these values, the platform searches the database for DSC signals that match the combined criteria. The relevant DSC signals are then visualized on the map, allowing users to see a graphical representation of the data that meets their specific requirements.
-How to Use:
-Select Filters: Use the drop-down menus to choose specific data sources, vessels of interest, call types, nature of distress, and set the desired date range.
-Click Visualize Waypoints: Press the "Visualize Waypoints" button to apply the selected filters.
-View Results: The map will update to display the DSC signals that match the combined filters, providing a clear visual overview of the relevant data.
-This feature enhances data analysis by allowing users to pinpoint specific DSC signals based on chosen filters and visualize them onto the map.
-
-
-Zoom out
-
-The "Zoom Out & Recenter" button provides a convenient way for users to return to the default view of the map after exploring different areas. This feature is particularly useful for users who wish to freely zoom in and out or pan around the map to examine specific details, but then need to quickly revert to the original, comprehensive view.
-How to Use:
-Interact with the Map: Users can zoom in, zoom out, and pan around the map to explore specific regions and details.
-Revert to Default View: When users want to return to the original map view, they simply click the "Zoom Out & Recenter" button.
-Default View Restoration: The map will automatically zoom out and recenter, displaying the entire geographic area in the default view.
-This button ensures that users can easily navigate and interact with the map without losing their place, providing a seamless and user-friendly experience.
-
-Basic Navigation
-The RASP tool offers intuitive navigation tools to help users explore and interact with the map effectively. Here are the key navigation features:
-
-Mouse Click and Drag: Click and hold the left mouse button, then drag to pan around the map. This allows users to move the map view and explore different regions.
-Scroll to Zoom: Use the scroll wheel on your mouse or the scroll gesture on your trackpad to zoom in and out of the map. Scrolling up will zoom in, providing a closer view, while scrolling down will zoom out, offering a broader perspective.
-Zoom In/Out Buttons: The platform may include on-screen buttons for zooming in and out, typically located on the side of the map interface. These buttons provide an alternative method for adjusting the zoom level.
-Zoom Out & Recenter Button: Click this button to quickly return to the default map view. This is useful if you have navigated away from the initial view and want to reset the map position and zoom level.
-Interactive Icons: Click on any DSC signal icon on the map to open an information modal with detailed data about the signal. This feature helps users quickly access important information without leaving the map view.
-Toggle Map Legend: Use the arrow bar on the right side of the map to hide or unhide the map legend. This allows users to manage the display of legend information based on their needs, ensuring an uncluttered map view when necessary.
-These navigation tools are designed to provide a seamless and user-friendly experience, allowing users to easily explore, analyze, and interact with the map data.
-
-DSC Signal Information Modal
-
-Users can click on DSC signals displayed on the map to view detailed information about each signal in an information modal. This modal presents the relevant details in a table format, providing a comprehensive overview of the DSC signal. The information includes the following details:
-
-Source Name: The origin of the signal, indicating the data source.
-MMSI: The Maritime Mobile Service Identity, a unique identifier for the vessel.
-Vessel Name: The name of the vessel associated with the DSC signal.
-Nature of Distress: The type of distress the vessel is experiencing.
-Latitude: The geographical latitude where the signal was received.
-Longitude: The geographical longitude where the signal was received.
-Receiver Time: The exact time the signal was received.
-Mode: The status of the signal, indicating whether it is real or test.
-Call Type: The classification of the call, such as Distress Alert, Routine, and Urgency and Safety.
-This feature allows users to quickly access and review crucial information about each DSC signal, enhancing situational awareness and decision-making capabilities. The modal ensures that all relevant data is easily accessible and presented in a clear and organized manner.
-
-Map Legend
-
-The map legend helps users distinguish between different icons displayed on the map, each representing a different type of distress signal. Here is a breakdown of the icons and their meanings:
-
-Icon: The visual representation of the distress type on the map.
-DSC No.: The numeric code associated with each type of distress signal.
-Nature of Distress: The description of the distress type.
-Legend Details
-108 - Abandoning Ship
-102 - Collision
-104 - Danger of Capsizing
-106 - Disabled and Adrift
-112 - EPIRB Emissions
-100 - Fire / Explosion
-101 - Flooding
-103 - Grounding
-110 - Man Overboard
-109 - Piracy / Armed Robbery
-105 - Sinking
-107 - Undesignated Distress
-Test - Test Signal (represented by a star icon)
-N/A - Tracks (lines connecting distress signals with the same MMSI received within a selected time frame)
-Hide/Unhide Map Legend
-You can hide or unhide the map legend by clicking on the arrow bar located on the right side of the legend. This allows you to manage the display of the legend based on your needs, ensuring a clear and uncluttered view of the map when necessary.
-
-
-The RASP tool offers a range of interactive features to help users effectively explore and analyze DSC data on the map. Users can easily navigate the map by panning, zooming in and out, and resetting the view to explore different regions effortlessly. By clicking on DSC signals, users can access detailed information about each signal through an information modal, which provides comprehensive details in an organized table format. These features work together to enhance the user's ability to interact with and analyze the data, providing a user-friendly and informative experience.
-
-
-
-The RASP Data Analysis Platform provides an intuitive interface for exploring and analyzing DSC data on an interactive map. The user console on the left allows you to filter data by source, vessel, distress type, district area, and date range. Once filters are set, click "Visualize Waypoints" to display the relevant signals on the map. The "Zoom Out & Recenter" button resets the map to its default view, and the map legend helps interpret different distress icons. You can hide or show the user console and map legend for a clearer view by clicking the arrows. This platform simplifies the process of navigating and understanding DSC data.
+Why StatefulSet: StatefulSets are used instead of Deployments to ensure that each pod has a unique and persistent identity, which is crucial for the Spaceflake application's node ID assignment. This uniqueness allows the system to scale horizontally while maintaining unique identification across nodes and preventing ID conflicts.
+This architecture ensures high availability and scalability of the Spaceflake service, allowing it to handle a large number of requests efficiently.
