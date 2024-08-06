@@ -5,10 +5,17 @@ from airflow.utils.dates import days_ago
 from airflow.www.security import AirflowSecurityManager
 from airflow.settings import Session
 from airflow.models import DagModel
+from flask_appbuilder import AppBuilder
+from airflow import settings
+from airflow.www.app import create_app
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Create Flask app and appbuilder instances
+app = create_app()
+appbuilder = AppBuilder(app, session=settings.Session, base_template='airflow/main.html', indexview=appbuilder_indexview)
 
 def get_dag_owners():
     session = Session()
@@ -26,7 +33,7 @@ def get_dag_owners():
 
 def create_custom_roles():
     dag_owners = get_dag_owners()
-    security_manager = AirflowSecurityManager()
+    security_manager = AirflowSecurityManager(appbuilder)  # Initialize with appbuilder
     
     for owner, dag_ids in dag_owners.items():
         role_name = f"{owner}_group_access"
