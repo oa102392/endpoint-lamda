@@ -1196,3 +1196,74 @@ if __name__ == "__main__":
     logger.debug("Script execution started")
     create_custom_roles()
     logger.debug("Script execution finished")
+
+
+---------
+
+
+import subprocess
+import logging
+from airflow import settings
+from airflow.models import DagModel
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+def get_dag_owners():
+    logger.debug("Starting to get DAG owners")
+    session = settings.Session()
+    dags = session.query(DagModel).all()
+    dag_owners = {}
+    for dag in dags:
+        owner = dag.owners
+        if owner in dag_owners:
+            dag_owners[owner].append(dag.dag_id)
+        else:
+            dag_owners[owner] = [dag.dag_id]
+        logger.info(f"Found owner {dag.owners} for DAG {dag.dag_id}")
+    session.close()
+    logger.debug(f"Completed getting DAG owners: {dag_owners}")
+    return dag_owners
+
+def execute_command(command):
+    try:
+        logger.debug(f"Executing command: {command}")
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logger.debug(result.stdout.decode('utf-8'))
+        return result
+    except subprocess.CalledProcessError as e:
+        logger.error(e.stderr.decode('utf-8'))
+        return None
+
+def create_custom_roles():
+    logger.debug("Starting to create custom roles")
+    dag_owners = get_dag_owners()
+    
+    for owner, dag_ids in dag_owners.items():
+        role_name = f"{owner}_group_access"
+        logger.debug(f"Processing owner: {owner} with role: {role_name}")
+
+        # Create role if not exists
+        create_role_cmd = f"airflow roles create {role_name}"
+        execute_command(create_role_cmd)
+        
+        # Create permissions and assign to the role
+        for dag_id in dag_ids:
+            for permission in ['can_read', 'can_edit', 'can_delete']:
+                permission_name = f"{permission}_on_DAG:{dag_id}"
+                add_permission_cmd = f"airflow roles add-permissions {role_name} {permission_name}"
+                execute_command(add_permission_cmd)
+                logger.info(f"Assigned {permission_name} to role {role_name}")
+
+        # Assign role to the user
+        add_role_cmd = f"airflow users add-role -r {role_name} -u {owner}"
+        execute_command(add_role_cmd)
+        logger.info(f"Assigned role {role_name} to user {owner}")
+    
+    logger.debug("Completed creating custom roles")
+
+if __name__ == "__main__":
+    logger.debug("Script execution started")
+    create_custom_roles()
+    logger.debug("Script execution finished")
