@@ -1059,3 +1059,140 @@ if __name__ == "__main__":
     logger.debug("Script execution started")
     create_custom_roles()
     logger.debug("Script execution finished")
+
+
+--------------
+
+
+import logging
+from airflow import settings
+from airflow.models import DagModel
+from airflow.www.security import AirflowSecurityManager
+from flask_appbuilder import AppBuilder
+from airflow.www.app import create_app
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+def get_dag_owners():
+    logger.debug("Starting to get DAG owners")
+    session = settings.Session()
+    dags = session.query(DagModel).all()
+    dag_owners = {}
+    for dag in dags:
+        owner = dag.owners
+        if owner in dag_owners:
+            dag_owners[owner].append(dag.dag_id)
+        else:
+            dag_owners[owner] = [dag.dag_id]
+        logger.info(f"Found owner {dag.owners} for DAG {dag.dag_id}")
+    session.close()
+    logger.debug(f"Completed getting DAG owners: {dag_owners}")
+    return dag_owners
+
+def create_custom_roles():
+    logger.debug("Starting to create custom roles")
+    try:
+        app = create_app()
+        logger.debug("App created successfully")
+    except Exception as e:
+        logger.error(f"Error creating app: {e}")
+        return
+    
+    try:
+        appbuilder = AppBuilder(app, session=settings.Session)
+        logger.debug("AppBuilder created successfully")
+    except Exception as e:
+        logger.error(f"Error creating AppBuilder: {e}")
+        return
+    
+    try:
+        security_manager = AirflowSecurityManager(appbuilder)
+        logger.debug("AirflowSecurityManager created successfully")
+    except Exception as e:
+        logger.error(f"Error creating AirflowSecurityManager: {e}")
+        return
+    
+    dag_owners = get_dag_owners()
+    
+    for owner, dag_ids in dag_owners.items():
+        role_name = f"{owner}_group_access"
+        logger.debug(f"Processing owner: {owner} with role: {role_name}")
+        
+        # Check if role exists, if not create it
+        try:
+            role = security_manager.find_role(role_name)
+            if not role:
+                role = security_manager.create_role(role_name)
+                logger.info(f"Created role {role_name}")
+            else:
+                logger.info(f"Role {role_name} already exists")
+        except Exception as e:
+            logger.error(f"Error handling role {role_name}: {e}")
+            continue
+        
+        # Create permissions for each DAG and assign to the role
+        for dag_id in dag_ids:
+            read_permission = f"can_read_on_DAG:{dag_id}"
+            edit_permission = f"can_edit_on_DAG:{dag_id}"
+            delete_permission = f"can_delete_on_DAG:{dag_id}"
+            
+            # Create permissions if they don't exist
+            logger.debug(f"Processing DAG: {dag_id} for owner: {owner}")
+            try:
+                if not security_manager.find_permission_view_menu('can_read', f'DAG:{dag_id}'):
+                    security_manager.create_permission('can_read', f'DAG:{dag_id}')
+                    logger.info(f"Created permission {read_permission}")
+                else:
+                    logger.info(f"Permission {read_permission} already exists")
+                if not security_manager.find_permission_view_menu('can_edit', f'DAG:{dag_id}'):
+                    security_manager.create_permission('can_edit', f'DAG:{dag_id}')
+                    logger.info(f"Created permission {edit_permission}")
+                else:
+                    logger.info(f"Permission {edit_permission} already exists")
+                if not security_manager.find_permission_view_menu('can_delete', f'DAG:{dag_id}'):
+                    security_manager.create_permission('can_delete', f'DAG:{dag_id}')
+                    logger.info(f"Created permission {delete_permission}")
+                else:
+                    logger.info(f"Permission {delete_permission} already exists")
+            except Exception as e:
+                logger.error(f"Error handling permissions for DAG {dag_id}: {e}")
+                continue
+            
+            # Assign permissions to the role
+            try:
+                permission_view_read = security_manager.find_permission_view_menu('can_read', f'DAG:{dag_id}')
+                permission_view_edit = security_manager.find_permission_view_menu('can_edit', f'DAG:{dag_id}')
+                permission_view_delete = security_manager.find_permission_view_menu('can_delete', f'DAG:{dag_id}')
+                
+                if permission_view_read not in role.permissions:
+                    security_manager.add_permission_role(role, permission_view_read)
+                    logger.info(f"Assigned read permission to role {role_name} for DAG {dag_id}")
+                if permission_view_edit not in role.permissions:
+                    security_manager.add_permission_role(role, permission_view_edit)
+                    logger.info(f"Assigned edit permission to role {role_name} for DAG {dag_id}")
+                if permission_view_delete not in role.permissions:
+                    security_manager.add_permission_role(role, permission_view_delete)
+                    logger.info(f"Assigned delete permission to role {role_name} for DAG {dag_id}")
+            except Exception as e:
+                logger.error(f"Error assigning permissions to role {role_name} for DAG {dag_id}: {e}")
+                continue
+        
+        # Assign role to the user
+        try:
+            user = security_manager.find_user(username=owner)
+            if user:
+                security_manager.add_role(user, role)
+                logger.info(f"Assigned role {role_name} to user {owner}")
+            else:
+                logger.warning(f"User {owner} not found in Airflow users.")
+        except Exception as e:
+            logger.error(f"Error assigning role {role_name} to user {owner}: {e}")
+    
+    logger.debug("Completed creating custom roles")
+
+if __name__ == "__main__":
+    logger.debug("Script execution started")
+    create_custom_roles()
+    logger.debug("Script execution finished")
