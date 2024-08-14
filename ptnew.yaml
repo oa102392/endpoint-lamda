@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache-webserver-deployment
+  namespace: webpdst-dev
+  labels:
+    app: apache-webserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apache-webserver
+  template:
+    metadata:
+      labels:
+        app: apache-webserver
+    spec:
+      containers:
+      - name: apache-webserver
+        image: ctl-devops.aero.org/oa34666/apache-webserver-keycloak2:latest
+        ports:
+        - containerPort: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pdst-deployment
+  namespace: webpdst-dev
+  labels:
+    app: pdst
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pdst
+  template:
+    metadata:
+      labels:
+        app: pdst
+    spec:
+      containers:
+      - name: pdst
+        image: ctl-devops.aero.org/pdst/pdst:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: apache-web-service
+  namespace: webpdst-dev
+spec:
+  selector:
+    app: apache-webserver
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pdst-service
+  namespace: webpdst-dev
+spec:
+  selector:
+    app: pdst
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pdst-ingress
+  namespace: webpdst-dev
+spec:
+  rules:
+  - host: pdst-dev.e3.aero.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: apache-web-service
+            port:
+              number: 8080
