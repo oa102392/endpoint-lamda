@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Chart.Name }}
+  name: {{ .Release.Name }}-rasp-dashboard
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+    spec:
+      containers:
+        - env:
+            - name: HOST_SERVER
+              valueFrom:
+                secretKeyRef:
+                  key: HOST_SERVER
+                  name: {{ .Values.secrets.hostServerSecretName }}
+            # Add other environment variables here
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          name: rasp-dashboard-container
+          ports:
+            - containerPort: 4300
+              name: http-dashboard
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 150Mi
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-rasp-dashboard
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - name: http-dashboard
+      port: {{ .Values.service.port }}
+      protocol: TCP
+      targetPort: 4300
+  selector:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+  type: {{ .Values.service.type }}
+
+
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-ingress
+  namespace: {{ .Release.Namespace }}
+spec:
+  rules:
+    - host: {{ .Values.ingress.hostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-rasp-dashboard
+                port:
+                  number: 4300
+
+
+replicaCount: 1
+
+image:
+  repository: docker-registry.core-services.e3.aero.org/rasp/rasp-dashboard
+  tag: "458eb42187d627cc512fd75f1d6a87abb6637389"
+  pullPolicy: Always
+  pullSecret: harbor-rasp-readonly-dockerconfigjson
+
+secrets:
+  hostServerSecretName: host-server
+
+service:
+  type: ClusterIP
+  port: 4300
+
+ingress:
+  hostname: rasp-dashboard.dev.e3.aero.org
+
+
