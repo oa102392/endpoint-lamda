@@ -102,4 +102,116 @@ service:
 ingress:
   hostname: rasp-dashboard.dev.e3.aero.org
 
+secrets:
+  hostServerSecretName: host-server
+  mysqldbHostNameSecretName: mysqldb-host-name
+  mysqldbRootUsernameSecretName: mysqldb-root-username
+  mysqldbRootPasswordSecretName: mysqldb-root-password
+  proxyPasswordSecretName: proxy-password
+  mysqldbPortSecretName: mysqldb-port
+  mysqldbSchemaNameSecretName: mysqldb-schema-name
+  awsSecretAccessKeySecretName: aws-secret-access-key
+  awsSecretKeyIdSecretName: aws-secret-key-id
+  s3BucketNameSecretName: s3-bucket-name
+  jwtKeySecretName: jwt-key
+
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Chart.Name }}
+  name: {{ .Release.Name }}-rasp-dashboard
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+    spec:
+      containers:
+        - name: rasp-dashboard-container
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 4300
+              name: http-dashboard
+              protocol: TCP
+          env:
+            - name: HOST_SERVER
+              valueFrom:
+                secretKeyRef:
+                  key: HOST_SERVER
+                  name: {{ .Values.secrets.hostServerSecretName }}
+            - name: MYSQLDB_HOST_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQLDB_HOST_NAME
+                  name: {{ .Values.secrets.mysqldbHostNameSecretName }}
+            - name: MYSQLDB_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQLDB_USER_NAME
+                  name: {{ .Values.secrets.mysqldbRootUsernameSecretName }}
+            - name: MYSQLDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQLDB_PASSWORD
+                  name: {{ .Values.secrets.mysqldbRootPasswordSecretName }}
+            - name: PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: PROXY_PASSWORD
+                  name: {{ .Values.secrets.proxyPasswordSecretName }}
+            - name: MYSQLDB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQLDB_PORT
+                  name: {{ .Values.secrets.mysqldbPortSecretName }}
+            - name: MYSQLDB_SCHEMA_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQLDB_SCHEMA_NAME
+                  name: {{ .Values.secrets.mysqldbSchemaNameSecretName }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: AWS_SECRET_ACCESS_KEY
+                  name: {{ .Values.secrets.awsSecretAccessKeySecretName }}
+            - name: AWS_SECRET_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: AWS_SECRET_KEY_ID
+                  name: {{ .Values.secrets.awsSecretKeyIdSecretName }}
+            - name: S3_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: S3_BUCKET_NAME
+                  name: {{ .Values.secrets.s3BucketNameSecretName }}
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: JWT_KEY
+                  name: {{ .Values.secrets.jwtKeySecretName }}
+          resources:
+            requests:
+              cpu: 100m
+              memory: 150Mi
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
 
