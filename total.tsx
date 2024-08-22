@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function TotalProjects({ projectCount }: { projectCount: number }) {
     return (
         <div
@@ -7,32 +9,37 @@ export default function TotalProjects({ projectCount }: { projectCount: number }
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '100%',
-                fontFamily: 'Arial, sans-serif', // Use a clean, modern font
-                backgroundColor: '#f0f4f8', // Optional: add a subtle background color
+                fontFamily: 'Arial, sans-serif', // You can replace this with a more suitable font if needed
+                backgroundColor: '#f0f4f8', // A subtle background color, adjust as needed
                 padding: '20px',
                 borderRadius: '8px', // Rounded corners for a modern look
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // A soft shadow for a 3D effect
+                border: '1px solid #ddd', // Light border to define edges
+                width: '150px', // Width to make it more compact
+                textAlign: 'center', // Center the text horizontally
             }}
         >
-            <h2
+            <p
                 style={{
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    margin: '0',
-                    color: '#333', // Dark color for the label
+                    fontSize: '14px',
+                    fontWeight: 'normal',
+                    margin: '0 0 10px 0',
+                    color: '#666', // Subtle gray color for the label
+                    letterSpacing: '0.5px',
                 }}
             >
                 Total Projects
-            </h2>
-            <p
+            </p>
+            <h2
                 style={{
-                    fontSize: '48px', // Large font size for the number
+                    fontSize: '36px', // Large font size for the number
                     fontWeight: 'bold',
-                    margin: '10px 0 0 0',
-                    color: '#0070f3', // Primary color for the number
+                    margin: '0',
+                    color: '#333', // Dark color for the number
                 }}
             >
                 {projectCount}
-            </p>
+            </h2>
         </div>
     );
 }
