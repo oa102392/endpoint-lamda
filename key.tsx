@@ -42,3 +42,46 @@ export default function KeyStats({ activeProjects, startingProjects, endingProje
         </div>
     );
 }
+
+
+
+
+
+export default function KeyStats({ activeProjects, startingProjects, endingProjects }: KeyStatsProps) {
+    return (
+        <div
+            style={{
+                display: 'table',
+                width: '100%',
+                fontFamily: 'Arial, sans-serif',
+                backgroundColor: 'transparent',
+                borderSpacing: '8px 0',
+            }}
+        >
+            <div style={{ display: 'table-row' }}>
+                <span style={{ display: 'table-cell', fontWeight: 'bold', fontSize: '16px', paddingRight: '15px', borderBottom: '1px solid #ddd' }}>
+                    {activeProjects}
+                </span>
+                <span style={{ display: 'table-cell', fontSize: '14px', color: '#666', textAlign: 'left', borderBottom: '1px solid #ddd' }}>
+                    Active 2024
+                </span>
+            </div>
+            <div style={{ display: 'table-row' }}>
+                <span style={{ display: 'table-cell', fontWeight: 'bold', fontSize: '16px', paddingRight: '15px', borderBottom: '1px solid #ddd' }}>
+                    {startingProjects}
+                </span>
+                <span style={{ display: 'table-cell', fontSize: '14px', color: '#666', textAlign: 'left', borderBottom: '1px solid #ddd' }}>
+                    Starting 2025
+                </span>
+            </div>
+            <div style={{ display: 'table-row' }}>
+                <span style={{ display: 'table-cell', fontWeight: 'bold', fontSize: '16px', paddingRight: '15px' }}>
+                    {endingProjects}
+                </span>
+                <span style={{ display: 'table-cell', fontSize: '14px', color: '#666', textAlign: 'left' }}>
+                    Ending 2025
+                </span>
+            </div>
+        </div>
+    );
+}
