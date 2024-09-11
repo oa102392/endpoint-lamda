@@ -1,71 +1,63 @@
+'use client';
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Box } from '@mui/material';
 
 interface StackedBarChartBySubprogramProps {
     data: { program: string; subprogram: string; lifeCycleCost: number; fy2024Target: number }[];
+    title: string;
 }
 
-export default function StackedBarChartBySubprogram({ data }: StackedBarChartBySubprogramProps) {
-
-    // Group the subprograms under their respective programs
-    const groupedData = data.map(({ program, subprogram, lifeCycleCost, fy2024Target }) => ({
-        name: `${program} - ${subprogram}`, // Combine program and subprogram for Y-axis label
-        lifeCycleCost,
-        fy2024Target,
-    }));
-
+export default function StackedBarChartBySubprogram({ data, title }: StackedBarChartBySubprogramProps) {
     return (
-        <Box sx={{ width: '100%', height: '500px', overflowY: 'scroll', position: 'relative' }}>
-            {/* Fixed X-axis */}
-            <Box sx={{ position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1 }}>
-                <ResponsiveContainer width="100%" height={60}>
-                    <BarChart
-                        data={groupedData}
-                        layout="vertical"
-                    >
-                        <XAxis
-                            type="number"
-                            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
-                            label={{ value: 'Funding (USD)', position: 'insideBottomRight', offset: 0 }}
-                        />
-                    </BarChart>
-                </ResponsiveContainer>
-            </Box>
-
-            {/* Scrollable Y-axis and bars */}
-            <ResponsiveContainer width="100%" height={groupedData.length * 40}>
+        <div style={{ textAlign: 'center', margin: '20px' }}>
+            <h3>{title}</h3>
+            <ResponsiveContainer width="100%" height={data.length * 40}>
                 <BarChart
-                    data={groupedData}
-                    layout="vertical"
+                    data={data}
                     margin={{ top: 10, right: 30, left: 15, bottom: 10 }}
+                    layout="vertical"
+                    barCategoryGap={30}
                 >
                     <CartesianGrid strokeDasharray="3 3" />
+                    
+                    {/* XAxis */}
+                    <XAxis 
+                        type="number" 
+                        tickFormatter={(value) => `$${(value / 1000000).toFixed(0)}M`} 
+                        domain={[0, 'dataMax']} 
+                        interval={0} 
+                        ticks={[0, 200000000, 500000000, 750000000, 1000000000]} 
+                    />
+
+                    {/* YAxis */}
                     <YAxis 
-                        dataKey="name" 
+                        dataKey="subprogram" 
+                        width={200} 
                         type="category" 
+                        tickFormatter={(value, index) => {
+                            // If first item of the program, include program name before subprogram
+                            const currentProgram = data[index].program;
+                            const prevProgram = index > 0 ? data[index - 1].program : null;
+                            return prevProgram === currentProgram ? value : `${currentProgram}: ${value}`;
+                        }}
                         tick={{ textAnchor: 'end' }} 
-                        width={300}  // Increase for longer text
                         tickMargin={10} 
+                        interval={0} 
                     />
+
+                    {/* Tooltip */}
                     <Tooltip />
+                    
+                    {/* Legend */}
                     <Legend />
-                    <Bar 
-                        dataKey="lifeCycleCost" 
-                        fill="#d3b8e4" 
-                        name="Project Life Cycle Cost" 
-                        barSize={20} 
-                        stackId="a" 
-                    />
-                    <Bar 
-                        dataKey="fy2024Target" 
-                        fill="#6a0dad" 
-                        name="Total Target FY 2024 Req" 
-                        barSize={15} 
-                        stackId="a" 
-                    />
+
+                    {/* Bars */}
+                    <Bar dataKey="lifeCycleCost" barSize={20} stackId="a" fill="#d3b8e4" name="Project Life Cycle Cost" />
+                    <Bar dataKey="fy2024Target" barSize={15} stackId="a" fill="#6a0dad" name="Total Target FY 2024 Req" />
+
                 </BarChart>
             </ResponsiveContainer>
-        </Box>
+        </div>
     );
 }
