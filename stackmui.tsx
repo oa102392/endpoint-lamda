@@ -1,15 +1,18 @@
 import { BarChart } from '@mui/x-charts/BarChart';
 import { Box } from '@mui/material';
 
-export default function StackedBarChartComponent({ data, title }) {
+interface StackedBarChartComponentProps {
+    data: { name: string; lifeCycleCost: number; fy2024Target: number }[];
+}
+
+export default function StackedBarChartComponent({ data }: StackedBarChartComponentProps) {
     return (
         <Box sx={{ width: '100%', height: '500px', overflowY: 'scroll', position: 'relative' }}>
-            {/* Title */}
-            <h3 style={{ textAlign: 'center' }}>{title}</h3>
 
-            {/* Bar Chart with fixed X-axis and vertical scroll */}
+            {/* Sticky X-Axis BarChart */}
             <Box sx={{ position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1 }}>
                 <BarChart
+                    dataset={data}
                     width={800}
                     height={60}  // X-axis only height
                     xAxis={[
@@ -19,6 +22,7 @@ export default function StackedBarChartComponent({ data, title }) {
                             label: 'Funding (USD)',
                         },
                     ]}
+                    series={[]}  // Empty series since it's only for the X-axis
                 />
             </Box>
 
