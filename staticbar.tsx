@@ -24,32 +24,17 @@ const CustomizedAxisTickX = ({ x, y, payload }: any) => {
 export default function StackedBarChartComponent({ data, title }: StackedBarChartComponentProps) {
     return (
         <div style={{ textAlign: 'center', margin: '20px' }}>
-            {/* Fixed X-Axis section */}
-            <div style={{ position: 'sticky', top: 0, zIndex: 1, backgroundColor: '#fff', paddingBottom: '10px' }}>
-                <ResponsiveContainer width="100%" height={60}>
-                    <BarChart data={data} layout="horizontal">
-                        <CartesianGrid strokeDasharray="3 3" />
-                        {/* Static XAxis */}
-                        <XAxis
-                            type="number"
-                            tick={<CustomizedAxisTickX />}
-                            domain={[0, 'dataMax']}
-                            interval={0}
-                            ticks={[0, 200000000, 500000000, 750000000, 1000000000]}
-                        />
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
-
-            {/* Scrollable Y-Axis and bars */}
+            {/* Scrollable container for the chart */}
             <div style={{ maxHeight: '450px', overflowY: 'scroll' }}>
                 <ResponsiveContainer width="100%" height={data.length * 40}>
                     <BarChart
                         data={data}
-                        margin={{ top: 10, right: 30, left: -75, bottom: 10 }}
+                        margin={{ top: 10, right: 30, left: 50, bottom: 80 }} // Adjust bottom margin for X-axis space
                         layout="vertical"
                     >
                         <CartesianGrid strokeDasharray="3 3" />
+
+                        {/* YAxis */}
                         <YAxis
                             dataKey="name"
                             type="category"
@@ -57,8 +42,20 @@ export default function StackedBarChartComponent({ data, title }: StackedBarChar
                             tickMargin={10}
                             interval={0}
                         />
+
+                        {/* XAxis */}
+                        <XAxis
+                            type="number"
+                            tick={<CustomizedAxisTickX />}
+                            domain={[0, 'dataMax']}
+                            interval={0}
+                            ticks={[0, 200000000, 500000000, 750000000, 1000000000]}
+                        />
+
                         <Tooltip />
                         <Legend />
+
+                        {/* Bars */}
                         <Bar dataKey="lifeCycleCost" stackId="a" fill="#d3b8e4" name="Project Life Cycle Cost" />
                         <Bar dataKey="fy2024Target" stackId="a" fill="#6a0dad" name="Total Target FY 2024 Req" />
                     </BarChart>
