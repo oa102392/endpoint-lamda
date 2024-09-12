@@ -13,16 +13,21 @@ interface StackedBarChartComponentProps {
 export default function StackedBarChartComponent({ data, title }: StackedBarChartComponentProps) {
     return (
         <div style={{ textAlign: 'center', margin: '20px' }}>
-            <h3>{title}</h3>
+        <div style={{maxHeight: '450px', overflowY:'scroll'}}>
             <ResponsiveContainer width="100%" height={400}>
                 <BarChart
                     data={data}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 10, right: 30, left: -75, bottom: 10 }}
                     layout="vertical"
                 >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" />
+                    <XAxis type="number" 
+                        tickFormatter={(value) => `$${(value / 1000000).toFixed(0)}M`} 
+                        domain={[0, 'dataMax']} 
+                        interval={0} 
+                        ticks={[0, 200000000, 500000000, 750000000, 1000000000]} 
+                            />
+                    <YAxis dataKey="name" type="category" tick={{ textAnchor: 'end'}} tickMargin={10} interval={0} />
                     <Tooltip />
                     <Legend />
                     <Bar dataKey="lifeCycleCost" stackId="a" fill="#d3b8e4" name="Project Life Cycle Cost" />
@@ -30,5 +35,18 @@ export default function StackedBarChartComponent({ data, title }: StackedBarChar
                 </BarChart>
             </ResponsiveContainer>
         </div>
+        </div>
     );
 }
+
+
+const CustomizedAxisTickX = ({ x, y, payload }: any) => {
+    return (
+        <g transform={`translate(${x},${y})`}>
+            {/* Display custom X-axis label */}
+            <text x={0} y={0} dy={16} textAnchor="middle" fontSize={12} fill="#333">
+                {`$${(payload.value / 1000000).toFixed(0)}M`}
+            </text>
+        </g>
+    );
+};
