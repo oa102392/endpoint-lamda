@@ -61,3 +61,26 @@ export default function StackedBarChartBySubprogram({ data, title }: StackedBarC
         </div>
     );
 }
+
+
+
+const CustomizedAxisTick = ({ x, y, payload, data }: any) => {
+    const { value, index } = payload;
+    const program = data[index].program;
+    const prevProgram = index > 0 ? data[index - 1].program : null;
+
+    return (
+        <g transform={`translate(${x},${y})`}>
+            {/* Display program name if it changes */}
+            {prevProgram !== program && (
+                <text x={-200} y={0} dy={16} textAnchor="start" fontSize={12} fontWeight="bold" fill="#333">
+                    {program}
+                </text>
+            )}
+            {/* Display subprogram name */}
+            <text x={0} y={0} dy={16} textAnchor="end" fontSize={12} fill="#333">
+                {value}
+            </text>
+        </g>
+    );
+};
