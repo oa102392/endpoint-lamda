@@ -49,21 +49,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const funding_by_site = Object.entries(
     projects.reduce((acc, { site, life_cycle_cost, target_fy_2024_req }) => {
       if (!acc[site]) acc[site] = { life_cycle_cost: 0, fy2024_target: 0 };
-      acc[site].life_cycle_cost += life_cycle_cost;
-      acc[site].fy2024_target += target_fy_2024_req;
+      acc[site].life_cycle_cost += life_cycle_cost || 0;
+      acc[site].fy2024_target += target_fy_2024_req || 0;
       return acc;
     }, {} as Record<string, { life_cycle_cost: number; fy2024_target: number }>)
-  ).map(([name, values]) => ({ name, ...values }));
+).map(([name, values]) => ({
+    name, // The site name (e.g., "SNL")
+    lifeCycleCost: values.life_cycle_cost, // Aggregated life cycle cost
+    fy2024Target: values.fy2024_target, // Aggregated FY 2024 target
+  }));
 
   // Aggregate data by subprogram
   const funding_by_subprogram = Object.entries(
     projects.reduce((acc, { subprogram, life_cycle_cost, target_fy_2024_req }) => {
       if (!acc[subprogram]) acc[subprogram] = { life_cycle_cost: 0, fy2024_target: 0 };
-      acc[subprogram].life_cycle_cost += life_cycle_cost;
-      acc[subprogram].fy2024_target += target_fy_2024_req;
+      acc[subprogram].life_cycle_cost += life_cycle_cost || 0;
+      acc[subprogram].fy2024_target += target_fy_2024_req || 0;
       return acc;
     }, {} as Record<string, { life_cycle_cost: number; fy2024_target: number }>)
-  ).map(([name, values]) => ({ name, ...values }));
+).map(([name, values]) => ({
+    name, // The site name (e.g., "SNL")
+    lifeCycleCost: values.life_cycle_cost, // Aggregated life cycle cost
+    fy2024Target: values.fy2024_target, // Aggregated FY 2024 target
+  }));
 
   res.status(200).json({
     project_count,
@@ -77,4 +85,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
 
   await client.end();
+}
+
+
+// Function to aggregate by program and subprogram
+function aggregateByProgramAndSubprogram(projects: Project[]): { program: string; subprogram: string; lifeCycleCost: number; fy2024Target: number }[] {
+  return Object.entries(
+    projects.reduce((acc, { program, subprogram, life_cycle_cost, target_fy_2024_req }) => {
+      const key = `${program}-${subprogram}`;
+      if (!acc[key]) {
+        acc[key] = {
+          program,
+          subprogram,
+          lifeCycleCost: 0,
+          fy2024Target: 0,
+        };
+      }
+      acc[key].lifeCycleCost += life_cycle_cost || 0;
+      acc[key].fy2024Target += target_fy_2024_req || 0;
+      return acc;
+    }, {} as Record<string, { program: string; subprogram: string; lifeCycleCost: number; fy2024Target: number }>)
+  ).map(([_, values]) => values);
 }
