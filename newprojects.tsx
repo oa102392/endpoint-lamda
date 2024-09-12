@@ -109,37 +109,31 @@ function aggregateByProgramAndSubprogram(projects: Project[]): { program: string
 }
 
 
-// Aggregate data by subprogram
+// Aggregate data by subprogram and program
 const funding_by_subprogram = Object.entries(
-  projects.reduce((acc, { subprogram, project_title, life_cycle_cost, target_fy_2024_req }) => {
-    // Ensure that nulls and strings are handled by converting to numbers, and defaulting to 0 if necessary
-    const cost = parseFloat(life_cycle_cost) || 0;
-    const target = parseFloat(target_fy_2024_req) || 0;
-
+  projects.reduce((acc, { program, subprogram, life_cycle_cost, target_fy_2024_req }) => {
     // Initialize subprogram entry in the accumulator if it doesn't exist
     if (!acc[subprogram]) {
       acc[subprogram] = { 
+        program,  // Store the program in the object
         life_cycle_cost: 0, 
-        fy2024_target: 0, 
-        projects: []  // Add a projects array to keep track of project names
+        fy2024_target: 0 
       };
     }
+
+    // Ensure null or invalid values are handled by converting to numbers, and defaulting to 0 if necessary
+    const cost = parseFloat(life_cycle_cost) || 0;
+    const target = parseFloat(target_fy_2024_req) || 0;
 
     // Aggregate life cycle cost and FY 2024 target
     acc[subprogram].life_cycle_cost += cost;
     acc[subprogram].fy2024_target += target;
 
-    // Add the project title to the subprogram's projects array
-    if (project_title) {
-      acc[subprogram].projects.push(project_title);
-    }
-
     return acc;
-  }, {} as Record<string, { life_cycle_cost: number; fy2024_target: number; projects: string[] }>)
-).map(([name, values]) => ({
-  name, // Subprogram name
-  lifeCycleCost: values.life_cycle_cost, // Aggregated life cycle cost
-  fy2024Target: values.fy2024_target, // Aggregated FY 2024 target
-  projects: values.projects // List of project titles
+  }, {} as Record<string, { program: string; life_cycle_cost: number; fy2024_target: number }>)
+).map(([subprogram, values]) => ({
+  program: values.program,       // Add the program to the final result
+  subprogram,                    // Subprogram name
+  lifeCycleCost: values.life_cycle_cost,  // Aggregated life cycle cost
+  fy2024Target: values.fy2024_target      // Aggregated FY 2024 target
 }));
-
