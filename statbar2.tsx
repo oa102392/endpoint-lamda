@@ -26,23 +26,8 @@ export default function StackedBarChartComponent({ data, title }: StackedBarChar
         <div style={{ textAlign: 'center', margin: '20px' }}>
             <h3>{title}</h3>
 
-            {/* Fixed X-Axis container */}
-            <div style={{ position: 'sticky', top: 0, zIndex: 1, backgroundColor: '#fff' }}>
-                <ResponsiveContainer width="100%" height={60}>
-                    <BarChart layout="horizontal">
-                        <XAxis
-                            type="number"
-                            tick={<CustomizedAxisTickX />}
-                            domain={[0, 'dataMax']}
-                            interval={0}
-                            ticks={[0, 200000000, 500000000, 750000000, 1000000000]}
-                        />
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
-
             {/* Scrollable container for bars */}
-            <div style={{ maxHeight: '450px', overflowY: 'scroll' }}>
+            <div style={{ maxHeight: '450px', overflowY: 'scroll', width: '100%' }}>
                 <ResponsiveContainer width="100%" height={data.length * 40}>
                     <BarChart
                         data={data}
@@ -66,6 +51,21 @@ export default function StackedBarChartComponent({ data, title }: StackedBarChar
                         {/* Bars */}
                         <Bar dataKey="lifeCycleCost" stackId="a" fill="#d3b8e4" name="Project Life Cycle Cost" />
                         <Bar dataKey="fy2024Target" stackId="a" fill="#6a0dad" name="Total Target FY 2024 Req" />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+
+            {/* Fixed X-Axis container */}
+            <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+                <ResponsiveContainer width="100%" height={60}>
+                    <BarChart layout="horizontal">
+                        <XAxis
+                            type="number"
+                            tick={<CustomizedAxisTickX />}
+                            domain={[0, 'dataMax']}
+                            interval={0}
+                            ticks={[0, 200000000, 500000000, 750000000, 1000000000]}
+                        />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
