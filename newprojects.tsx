@@ -61,14 +61,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   // Aggregate data by subprogram
   const funding_by_subprogram = Object.entries(
-    projects.reduce((acc, { subprogram, life_cycle_cost, target_fy_2024_req }) => {
-      if (!acc[subprogram]) acc[subprogram] = { life_cycle_cost: 0, fy2024_target: 0 };
+    projects.reduce((acc, { program, subprogram, life_cycle_cost, target_fy_2024_req }) => {
+      if (!acc[subprogram]) acc[subprogram] = { program, life_cycle_cost: 0, fy2024_target: 0 };
       acc[subprogram].life_cycle_cost += life_cycle_cost || 0;
       acc[subprogram].fy2024_target += target_fy_2024_req || 0;
       return acc;
-    }, {} as Record<string, { life_cycle_cost: number; fy2024_target: number }>)
-).map(([name, values]) => ({
-    name, // The site name (e.g., "SNL")
+    }, {} as Record<string, { program: string; subprogram: string; life_cycle_cost: number; fy2024_target: number }>)
+).map(([subprogram, values]) => ({
+    program: values.program,
+    subprogram: subprogram,
     lifeCycleCost: values.life_cycle_cost, // Aggregated life cycle cost
     fy2024Target: values.fy2024_target, // Aggregated FY 2024 target
   }));
