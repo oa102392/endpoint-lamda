@@ -166,3 +166,18 @@ Follow these steps to install the dependencies:
 3. Run the following command to install all dependencies:
    ```bash
    npm install
+
+
+
+## Keeping Test Files in the Right Directory
+
+To ensure that **Mocha** can find and execute your test files, make sure all test files are located in the `test` directory at the root of your project. By default, the project expects the following directory structure:
+
+```bash
+project-root/
+├── app.js
+├── package.json
+├── test/
+│   ├── example.test.js
+│   ├── api.test.js
+│   └── other-tests.js
