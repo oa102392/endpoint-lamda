@@ -186,3 +186,135 @@ s3.listObjectsV2({ Bucket: bucketName }, (err, data) => {
   }
 });
 ```
+
+
+
+
+## Creating Mocha Tests
+
+Mocha tests are an essential part of ensuring the reliability and functionality of your application. In our setup, authentication is required before running the tests because some endpoints are protected and require a logged-in user.
+
+---
+
+### 1. Authentication for Tests
+
+In the test setup, authentication is performed before running the tests. The shared `authenticatedAgent` object is used to make requests to protected endpoints.
+
+#### Authentication Code Example
+
+```javascript
+const authenticatedAgent = request.agent(app);
+
+// Global setup for authentication
+before((done) => {
+  authenticatedAgent
+    .post('/login') // The endpoint to authenticate a user
+    .send({
+      username: process.env.MOCHA_USERNAME, // The username for authentication
+      password: process.env.MOCHA_PASSWORD, // The password for authentication
+    })
+    .end((err, response) => {
+      if (err) return done(err); // Handle any errors during login
+      done(); // Signal that authentication is complete
+    });
+});
+
+
+## Explanation
+
+### Authentication Code
+
+1. **`request.agent(app)`**  
+   - Creates an agent to maintain a shared cookie session, allowing multiple requests to reuse the same session.
+
+2. **`before()`**  
+   - A Mocha hook that runs before all tests in the suite. Here, it is used to log in a user and set up the authenticated session.
+
+3. **`authenticatedAgent.post('/login')`**  
+   - Sends a `POST` request to the `/login` endpoint with the required credentials.
+
+4. **`process.env.MOCHA_USERNAME` and `process.env.MOCHA_PASSWORD`**  
+   - Environment variables that store the username and password for authentication.
+
+---
+
+## Writing a Test
+
+Tests in Mocha are structured using the `describe` and `it` functions. Below is an example test for a protected endpoint.
+
+### Example Test Code
+
+```javascript
+describe('GET /api/get_all_sources', () => {
+  it('should return all source entries from the database with a 200 status and correct keys', async () => {
+    const res = await authenticatedAgent.get('/api/get_all_sources'); // Send a GET request using the authenticated agent
+
+    // Check that the response status is 200
+    expect(res).to.have.status(200);
+
+    // Verify that the response body is an array
+    expect(res.body).to.be.an('array');
+
+    // Ensure each object in the array has the required keys
+    res.body.forEach((source) => {
+      expect(source).to.have.all.keys('numSourceID', 'txtSourceName');
+    });
+  });
+});
+```
+
+## Line-by-Line Explanation
+
+### `describe()`
+- Defines a test suite (a group of related tests) for a specific endpoint or feature.
+- In this case, the test suite is for the `GET /api/get_all_sources` endpoint.
+
+### `it()`
+- Defines an individual test within the suite. This test checks if the endpoint returns a `200` status code and the correct data structure.
+
+### `authenticatedAgent.get('/api/get_all_sources')`
+- Sends a `GET` request to the `/api/get_all_sources` endpoint using the `authenticatedAgent` to include the authenticated session.
+
+### `expect(res).to.have.status(200)`
+- Asserts that the response status code is `200`, indicating a successful request.
+
+### `expect(res.body).to.be.an('array')`
+- Asserts that the response body is an array.
+
+### `res.body.forEach()`
+- Iterates over each object in the response array to check if it has the required keys: `numSourceID` and `txtSourceName`.
+
+---
+
+## Adding Tests to the `test` Folder
+
+All Mocha tests should be added to the `app/test` folder to keep them organized. Follow these steps to create and add a test file:
+
+1. Create a new test file in the `app/test` folder, for example:  
+   ```plaintext
+   app/test/getAllSources.test.js
+   ```
+
+2. Write your test cases using the structure shown in the example below.
+
+3. Save the file and ensure it follows the naming convention `*.test.js` or `*.spec.js` for Mocha to detect it automatically.
+
+---
+
+## Example Test Template
+
+Here is a simple template to guide users in writing their own tests:
+
+```javascript
+const authenticatedAgent = request.agent(app);
+
+describe('Test Suite Name', () => {
+  it('Test description', async () => {
+    const res = await authenticatedAgent.get('/api/example_endpoint'); // Replace with your endpoint
+
+    expect(res).to.have.status(200); // Replace with expected status
+    // Add additional assertions based on your endpoint
+  });
+});
+
+```
