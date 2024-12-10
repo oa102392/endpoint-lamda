@@ -118,3 +118,71 @@ Replace the placeholders (your-access-key-id, your-secret-access-key, your-regio
 - If you are using a proxy, make sure to include the `HTTPS_PROXY` environment variable to specify the proxy URL.
 
 By setting these configurations and environment variables correctly, the backend will be able to authenticate with AWS and access required services.
+
+
+
+
+
+## Setting Up an S3 Bucket on AWS
+
+To store and manage files in your application, you need to create an S3 bucket on AWS and configure it for proper use with your application. Follow these steps:
+
+---
+
+### 1. Creating an S3 Bucket on AWS
+
+1. **Log in to AWS Console**: Go to the [AWS Management Console](https://aws.amazon.com/console/).
+2. **Navigate to S3**: Search for **S3** in the AWS services search bar and click on it.
+3. **Create a New Bucket**:
+   - Click the **"Create bucket"** button.
+   - Provide a unique bucket name (e.g., `your-bucket-name`).
+   - Choose the AWS region where you want to create the bucket (e.g., `us-west-1`).
+4. **Set Permissions**:
+   - Ensure the bucket allows access only to authenticated users by default.
+   - Disable public access unless explicitly required.
+5. **Create the Bucket**: Click **"Create bucket"** to finalize.
+
+---
+
+### 2. Adding Subdirectories to the S3 Bucket
+
+Once the bucket is created, add the following three subdirectories for file organization:
+
+#### Subdirectory Structure and Purpose
+
+1. **`received_files`**
+   - This folder stores GeoJSON files that are waiting to be processed by the S3 bucket insertion API endpoint.
+
+2. **`processed_and_archived`**
+   - This folder stores GeoJSON files that were successfully processed by the S3 bucket insertion API and archived. The contents of these files were successfully inserted into the database.
+
+3. **`error_in_file`**
+   - This folder stores GeoJSON files that failed to process. These files did not meet the requirements for insertion into the database (e.g., incorrect JSON format or missing required fields).
+
+#### Instructions for Adding Subdirectories
+
+1. Go to your newly created bucket in the **S3 Management Console**.
+2. Click **"Create folder"** and enter the folder name (e.g., `received_files`).
+3. Repeat this process for the other two folders: `processed_and_archived` and `error_in_file`.
+
+---
+
+### 3. Explaining Authentication in the Code
+
+In the backend code, the application uses AWS SDK to authenticate and interact with the S3 bucket. The bucket name is dynamically assigned using the `S3_BUCKET_NAME` environment variable.
+
+#### Relevant Code
+
+```javascript
+const bucketName = process.env.S3_BUCKET_NAME;
+const s3 = new AWS.S3();
+
+// Example usage
+s3.listObjectsV2({ Bucket: bucketName }, (err, data) => {
+  if (err) {
+    console.error("Error accessing bucket:", err);
+  } else {
+    console.log("Bucket contents:", data);
+  }
+});
+```
