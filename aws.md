@@ -318,3 +318,86 @@ describe('Test Suite Name', () => {
 });
 
 ```
+
+
+
+
+
+## Creating an AWS Lambda Function to Retrieve Vessel Information from MMSI
+
+This section provides instructions on how to create the AWS Lambda function and deploy it to retrieve vessel information from an MMSI (Maritime Mobile Service Identity).
+
+---
+
+### 1. Create a Lambda Function in AWS
+
+1. **Log in to AWS Console**:
+   - Go to the [AWS Management Console](https://aws.amazon.com/console/).
+   - Navigate to the **Lambda** service.
+
+2. **Create a New Function**:
+   - Click **"Create function"**.
+   - Select **"Author from scratch"**.
+   - Provide a function name, e.g., `GetVesselInfoFromMMSI`.
+   - Set the runtime to **Python 3.x** (e.g., Python 3.8 or later).
+   - Choose or create an execution role that grants the function necessary permissions.
+
+3. **Set Up the Function Code**:
+   - In the code editor, upload your Python script or paste the code below into the inline editor.
+
+---
+
+### 2. Lambda Function Code
+
+Paste the following code into the inline editor of your Lambda function:
+
+```python
+import json
+import re
+from package import requests  # Ensure 'requests' library is available in your deployment package
+
+def lambda_handler(event, context):
+    if event is not None and event.get('mmsi') is not None:
+        url = "https://www.marinetraffic.com/2013/06/mmsi-number-search.html?mmsi=" + event['mmsi']
+        response = requests.request("GET", url)
+        response_body = response.text
+        result = re.search(r'data-name="(.*?)"', response_body)
+        
+        if result is not None:
+            vessel_name = result.group(1)
+            return {
+                'statusCode': 200,
+                'body': json.dumps(vessel_name)
+            }
+    
+    return {
+        'statusCode': 404,
+        'body': 'Vessel Name Not Found'
+    }
+```
+
+### Key Points
+
+- **Input**: The function expects an MMSI value in the event object (e.g., `{ "mmsi": "303340000" }`).
+- **Output**:
+  - Returns the vessel name if found.
+  - Returns a `404` status if the vessel name cannot be retrieved.
+
+---
+
+### 3. Deploy the Lambda Function
+
+#### Save the Code
+- Once you’ve added the code, click **"Deploy"** to save the changes.
+
+#### Test the Function
+- Click **"Test"** and create a new test event with the following JSON input:
+
+```json
+{
+  "mmsi": "303340000"
+}
+```
+### Test the Function
+
+- Run the test and check the output for the vessel name.
