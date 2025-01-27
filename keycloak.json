@@ -1,0 +1,48 @@
+// Step 1: Authenticate with Keycloak to get an access token
+pm.sendRequest({
+    url: 'https://<keycloak-domain>/auth/realms/<realm>/protocol/openid-connect/token', // Replace with your Keycloak token URL
+    method: 'POST',
+    header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: {
+        mode: 'urlencoded',
+        urlencoded: [
+            { key: 'client_id', value: '<client-id>', disabled: false },
+            { key: 'client_secret', value: '<client-secret>', disabled: false },
+            { key: 'grant_type', value: 'password', disabled: false },
+            { key: 'username', value: '<your-username>', disabled: false },
+            { key: 'password', value: '<your-password>', disabled: false }
+        ]
+    }
+}, function (err, res) {
+    if (err) {
+        console.log('Error authenticating with Keycloak:', err);
+        return;
+    }
+
+    // Parse the access token from Keycloak response
+    const accessToken = res.json().access_token;
+    pm.environment.set('access_token', accessToken);
+
+    // Step 2: Use the access token to get the Airflow session cookie
+    pm.sendRequest({
+        url: 'https://<airflow-url>/api/v1/dags/<dag_id>', // Replace with your Airflow API URL
+        method: 'GET',
+        header: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    }, function (err, res) {
+        if (err) {
+            console.log('Error fetching Airflow session:', err);
+            return;
+        }
+
+        // Parse the session cookie from the response headers
+        const cookieHeader = res.headers.find(header => header.key.toLowerCase() === 'set-cookie');
+        if (cookieHeader) {
+            const sessionCookie = cookieHeader.value.split(';')[0]; // Extract the session cookie
+            pm.environment.set('session_cookie', sessionCookie);
+        }
+    });
+});
