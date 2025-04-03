@@ -1,0 +1,17 @@
+I’ve got most of the MongoDB logging integration for Airflow set up — the Mongo instance is deployed, the connection is defined in values.yaml as mongo_default, and remote logging is enabled in the config with remote_log_conn_id. I also made sure pymongo is included via extraPipPackages so the workers and scheduler have what they need.
+
+That said, I’m running into a blocker where DAG logs aren’t actually landing in the Mongo collection. The connection test passes, and there are no obvious errors in the logs, but the logging handler doesn’t seem to be kicking in. I suspect it could be:
+
+A missing or misconfigured airflow_local_settings.py fallback,
+
+A mismatch in how the logging class is resolved in the container,
+
+Or maybe the pymongo dependency didn’t load correctly in all pods (especially the worker).
+
+I’m doing some deeper debugging to confirm if the logging backend is even getting initialized, and also checking if log routing needs to be explicitly defined with a custom handler override. I’m testing a few things:
+
+Verifying the custom logging config is picked up during pod startup.
+
+Injecting a test log via a dummy DAG to see if it writes anything at all.
+
+Checking pod environments to make sure the logging class doesn’t fail silently.
