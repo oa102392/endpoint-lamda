@@ -38,3 +38,16 @@ I collaborated across departments to help migrate and operationalize key applica
 For the CAMP project, I prepared Airflow for production-readiness, helping enable integrations with internal applications like Doltlab and PDST through the Airflow API. I supported other teams in onboarding to the E3 Airflow instance, resolved deployment issues, and promoted best practices for DAG creation, RBAC, and dependency management. These efforts helped standardize automation across departments and established a scalable foundation for shared orchestration infrastructure.
 
 Beyond technical work, I regularly assisted other teams in troubleshooting local Airflow setups, shared knowledge across project boundaries, and contributed to the organization’s broader shift toward repeatable cloud-native engineering workflows. My work not only addressed immediate project needs but also laid groundwork for future scalability, maintainability, and collaboration across Aerospace.
+
+
+---
+
+
+
+Over the past year, I strengthened my impact at Aerospace by leading several cloud-native infrastructure efforts that helped modernize our internal workflows and enable cross-team automation. My contributions directly supported the enterprise-wide scaling of Airflow and the deployment of cloud-native apps like PDST on our E3 Kubernetes environment.
+
+I collaborated across departments to help migrate and operationalize key applications in E3, which included refactoring PDST to support containerization and automated deployments using Helm, Jenkins, and ArgoCD. I also designed and built a dedicated testing namespace for PDST, allowing the team to safely validate updates without impacting production — a shift that reduced downtime risk and improved team velocity.
+
+For the CAMP project, I prepared Airflow for production-readiness, helping enable integrations with internal applications like Doltlab and PDST through the Airflow API. I supported other teams in onboarding to the E3 Airflow instance, resolved deployment issues, and promoted best practices for DAG creation, RBAC, and dependency management. These efforts helped standardize automation across departments and established a scalable foundation for shared orchestration infrastructure.
+
+Beyond technical work, I regularly assisted other teams in troubleshooting local Airflow setups, shared knowledge across project boundaries, and contributed to the organization’s broader shift toward repeatable cloud-native engineering workflows. My work not only addressed immediate project needs but also laid groundwork for future scalability, maintainability, and collaboration across Aerospace.
