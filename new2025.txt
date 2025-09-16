@@ -51,3 +51,41 @@ I collaborated across departments to help migrate and operationalize key applica
 For the CAMP project, I prepared Airflow for production-readiness, helping enable integrations with internal applications like Doltlab and PDST through the Airflow API. I supported other teams in onboarding to the E3 Airflow instance, resolved deployment issues, and promoted best practices for DAG creation, RBAC, and dependency management. These efforts helped standardize automation across departments and established a scalable foundation for shared orchestration infrastructure.
 
 Beyond technical work, I regularly assisted other teams in troubleshooting local Airflow setups, shared knowledge across project boundaries, and contributed to the organization’s broader shift toward repeatable cloud-native engineering workflows. My work not only addressed immediate project needs but also laid groundwork for future scalability, maintainability, and collaboration across Aerospace.
+
+
+
+-------
+
+
+Technical Enablement Across Projects through Scalable Cloud Infrastructure
+This year, I played a critical role in modernizing and scaling internal cloud-native platforms to support cross-team automation and efficient application delivery. I led the migration of the PDST application from an unmanaged Kubernetes cluster to the E3-managed cloud platform, refactoring its architecture to support automated deployments using Helm, Jenkins, and ArgoCD. This move improved system reliability, enabled CI/CD pipelines, and introduced a dedicated test namespace to prevent disruptions to production. These improvements streamlined how the PDST team builds, tests, and deploys updates, while reducing manual operational overhead.
+
+Scaling Apache Airflow for Enterprise-Wide Usage
+As part of the CAMP project, I helped prepare Airflow for production across the enterprise by deploying it on E3 and enabling API-level access for apps like Doltlab and PDST. I worked closely with other teams to help them onboard onto the shared Airflow instance, troubleshoot environment setup, and standardize how DAGs are created, secured, and managed. These efforts laid the foundation for scalable and reusable orchestration infrastructure that other departments can now adopt with minimal friction.
+
+Full-Stack Development for NNSA Dashboard
+In support of the National Nuclear Security Administration (NNSA), I helped design and build a full-stack web application using React and Next.js. This dashboard allows NNSA stakeholders to view real-time project data in an intuitive interface, improving visibility and enabling faster decision-making. I collaborated across teams to deliver a seamless frontend experience backed by performant APIs and real-time data flows.
+
+Driving Collaboration and Technical Uplift
+Beyond project execution, I consistently supported other teams by sharing technical knowledge, assisting with local Airflow testing setups, and helping new teams migrate to E3 infrastructure. My focus on reusability, clear architectural patterns, and proactive support enabled multiple teams to adopt modern deployment workflows and reduce time-to-production.
+
+These accomplishments demonstrate not only strong technical execution, but also a deep commitment to collaboration, standardization, and advancing Aerospace’s cloud-native maturity.
+
+
+
+---+++
+
+
+Technical Enablement Across Projects through Scalable Cloud Infrastructure
+This year, I played a critical role in modernizing and scaling internal cloud-native platforms to support cross-team automation and efficient application delivery. I led the migration of the PDST application from an unmanaged Kubernetes cluster to the E3-managed cloud platform, refactoring its architecture to support automated deployments using Helm, Jenkins, and ArgoCD. This move improved system reliability, enabled CI/CD pipelines, and introduced a dedicated test namespace to prevent disruptions to production. These improvements streamlined how the PDST team builds, tests, and deploys updates, while reducing manual operational overhead.
+
+Scaling Apache Airflow for Enterprise-Wide Usage
+As part of the CAMP project, I helped prepare Airflow for production across the enterprise by deploying it on E3 and enabling API-level access for apps like Doltlab and PDST. I worked closely with other teams to help them onboard onto the shared Airflow instance, troubleshoot environment setup, and standardize how DAGs are created, secured, and managed. These efforts laid the foundation for scalable and reusable orchestration infrastructure that other departments can now adopt with minimal friction.
+
+Full-Stack Development for NNSA Dashboard
+In support of the National Nuclear Security Administration (NNSA), I helped design and build a full-stack web application using React and Next.js. This dashboard allows NNSA stakeholders to view real-time project data in an intuitive interface, improving visibility and enabling faster decision-making. I collaborated across teams to deliver a seamless frontend experience backed by performant APIs and real-time data flows.
+
+Driving Collaboration and Technical Uplift
+Beyond project execution, I consistently supported other teams by sharing technical knowledge, assisting with local Airflow testing setups, and helping new teams migrate to E3 infrastructure. My focus on reusability, clear architectural patterns, and proactive support enabled multiple teams to adopt modern deployment workflows and reduce time-to-production.
+
+These accomplishments demonstrate not only strong technical execution, but also a deep commitment to collaboration, standardization, and advancing Aerospace’s cloud-native maturity.
