@@ -1,1 +1,37 @@
-.
+# v1: dags/versioned_demo.py
+import pendulum
+from airflow.sdk import dag, task
+@dag(
+ dag_id='versioned_demo',
+ start_date=pendulum.datetime(2025, 1, 1, tz='UTC'),
+ schedule=None,
+ catchup=False,
+ tags=['demo', 'versioning'],
+)
+def versioned_demo():
+ @task
+ def extract():
+ return 1
+ @task
+ def transform(x: int):
+ return x + 1
+ @task
+ def load(y: int):
+ from airflow.sdk import get_current_context
+ ctx = get_current_context()
+ print('DagRun versions:', getattr(ctx['dag_run'], 'dag_versions', None))
+ x = extract()
+ y = transform(x)
+ load(y)
+versioned_demo()
+Micro demo: Version 2 (v2) structural change
+# v2 change: add a new validation task
+from airflow.sdk import task
+@task
+def validate(y: int):
+ assert y > 0
+# Re wire with new task to force a new DAG version
+x = extract()
+y = transform(x)
+validate(y)
+load(y)
