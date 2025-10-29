@@ -1,0 +1,284 @@
+staging/values.yaml
+
+
+# --- existing values above ---
+search:
+  enabled: true
+
+mtipParser:
+  enabled: false   # toggle if/when needed
+
+s3:
+  enabled: true
+
+  minio:
+    enabled: true
+    image:
+      repository: docker-registry.core-services.e3.aero.org/docker.io/minio/minio
+      tag: latest
+      pullPolicy: IfNotPresent
+    service:
+      apiPort: 9000
+      consolePort: 9001
+    # must already exist in the namespace; we will hard-fail if missing
+    existingSecretName: minio-credentials
+    # keys inside the secret (you can rename if your secret uses different keys)
+    secretKeys:
+      accessKey: accessKey
+      secretKey: secretKey
+    consoleIngress:
+      enabled: true
+      ingressClassName: traefik
+      host: dpbps-minio.dev-gw.e3.aero.org
+      path: /
+      tls: false
+
+    resources:
+      limits:
+        cpu: 100m
+        memory: 500Mi
+      requests:
+        cpu: 45m
+        memory: 150Mi
+
+  s3manager:
+    enabled: true
+    image:
+      repository: docker-registry.core-services.e3.aero.org/docker.io/cloudlena/s3manager
+      tag: latest
+      pullPolicy: IfNotPresent
+    port: 8080
+    endpoint:
+      host: dpbps-minio           # ClusterIP service name we create for MinIO
+      port: 9000
+      useSSL: false
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      host: dpbps-s3manager.dev-gw.e3.aero.org
+      path: /
+      tls: false
+    # reuse the same secret as MinIO for creds
+    existingSecretName: minio-credentials
+    secretKeys:
+      accessKey: accessKey
+      secretKey: secretKey
+    resources:
+      requests:
+        cpu: 45m
+        memory: 150Mi
+
+
+
+
+templates/s3/minio/deployment.yaml
+
+{{- if and .Values.s3.enabled (or .Values.search.enabled .Values.mtipParser.enabled) -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chart.fullname" . }}-minio
+  labels:
+    app.kubernetes.io/name: minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: minio
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minio
+    spec:
+      {{- if .Values.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: minio
+          image: "{{ .Values.s3.minio.image.repository }}:{{ .Values.s3.minio.image.tag }}"
+          imagePullPolicy: {{ .Values.s3.minio.image.pullPolicy }}
+          args: ["server", "/data"]
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.minio.existingSecretName }}
+                  key: {{ .Values.s3.minio.secretKeys.accessKey }}
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.minio.existingSecretName }}
+                  key: {{ .Values.s3.minio.secretKeys.secretKey }}
+            - name: MINIO_ADDRESS
+              value: "0.0.0.0:{{ .Values.s3.minio.service.apiPort }}"
+            - name: MINIO_CONSOLE_ADDRESS
+              value: "0.0.0.0:{{ .Values.s3.minio.service.consolePort }}"
+          ports:
+            - name: api
+              containerPort: {{ .Values.s3.minio.service.apiPort }}
+              protocol: TCP
+            - name: console
+              containerPort: {{ .Values.s3.minio.service.consolePort }}
+              protocol: TCP
+          resources:
+{{ toYaml .Values.s3.minio.resources | indent 12 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+{{- end }}
+
+
+templates/s3/minio/service.yaml
+
+{{- if and .Values.s3.enabled (or .Values.search.enabled .Values.mtipParser.enabled) -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: dpbps-minio
+  labels:
+    app.kubernetes.io/name: minio
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: minio
+  ports:
+    - name: api
+      port: {{ .Values.s3.minio.service.apiPort }}
+      targetPort: api
+      protocol: TCP
+    - name: console
+      port: {{ .Values.s3.minio.service.consolePort }}
+      targetPort: console
+      protocol: TCP
+{{- end }}
+
+
+
+templates/s3/minio/ingress-console.yaml
+
+{{- if and .Values.s3.enabled (or .Values.search.enabled .Values.mtipParser.enabled) .Values.s3.minio.consoleIngress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dpbps-minio-console
+spec:
+  ingressClassName: {{ .Values.s3.minio.consoleIngress.ingressClassName }}
+  rules:
+    - host: {{ .Values.s3.minio.consoleIngress.host }}
+      http:
+        paths:
+          - path: {{ .Values.s3.minio.consoleIngress.path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: dpbps-minio
+                port:
+                  name: console
+  {{- if .Values.s3.minio.consoleIngress.tls }}
+  tls:
+    - hosts: [{{ .Values.s3.minio.consoleIngress.host | quote }}]
+      secretName: dpbps-minio-console-tls
+  {{- end }}
+{{- end }}
+
+
+templates/s3/s3manager/deployment.yaml
+
+{{- if and .Values.s3.enabled (or .Values.search.enabled .Values.mtipParser.enabled) -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dpbps-s3manager
+  labels:
+    app.kubernetes.io/name: s3manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: s3manager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: s3manager
+    spec:
+      {{- if .Values.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: s3manager
+          image: "{{ .Values.s3.s3manager.image.repository }}:{{ .Values.s3.s3manager.image.tag }}"
+          imagePullPolicy: {{ .Values.s3.s3manager.image.pullPolicy }}
+          env:
+            - name: ENDPOINT
+              value: "{{ .Values.s3.s3manager.endpoint.host }}:{{ .Values.s3.s3manager.endpoint.port }}"
+            - name: ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.s3manager.existingSecretName }}
+                  key: {{ .Values.s3.s3manager.secretKeys.accessKey }}
+            - name: SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.s3manager.existingSecretName }}
+                  key: {{ .Values.s3.s3manager.secretKeys.secretKey }}
+            - name: USE_SSL
+              value: "{{ .Values.s3.s3manager.endpoint.useSSL }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.s3.s3manager.port }}
+              protocol: TCP
+          resources:
+{{ toYaml .Values.s3.s3manager.resources | indent 12 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+{{- end }}
+
+
+
+templates/s3/s3manager/service.yaml
+
+{{- if and .Values.s3.enabled (or .Values.search.enabled .Values.mtipParser.enabled) -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: dpbps-s3manager
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: s3manager
+  ports:
+    - name: http
+      port: {{ .Values.s3.s3manager.port }}
+      targetPort: http
+      protocol: TCP
+{{- end }}
+
+
+templates/s3/s3manager/ingress.yaml
+
+
+{{- if and .Values.s3.enabled (or .Values.search.enabled .Values.mtipParser.enabled) .Values.s3.s3manager.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dpbps-s3manager
+spec:
+  ingressClassName: {{ .Values.s3.s3manager.ingress.ingressClassName }}
+  rules:
+    - host: {{ .Values.s3.s3manager.ingress.host }}
+      http:
+        paths:
+          - path: {{ .Values.s3.s3manager.ingress.path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: dpbps-s3manager
+                port:
+                  name: http
+  {{- if .Values.s3.s3manager.ingress.tls }}
+  tls:
+    - hosts: [{{ .Values.s3.s3manager.ingress.host | quote }}]
+      secretName: dpbps-s3manager-tls
+  {{- end }}
+{{- end }}
