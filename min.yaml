@@ -282,3 +282,60 @@ spec:
       secretName: dpbps-s3manager-tls
   {{- end }}
 {{- end }}
+
+
+
+Notes.txt
+
+{{- if and .Values.s3.enabled (or .Values.search.enabled .Values.mtipParser.enabled) -}}
+{{- $secName := .Values.s3.minio.existingSecretName -}}
+{{- $ak := .Values.s3.minio.secretKeys.accessKey -}}
+{{- $sk := .Values.s3.minio.secretKeys.secretKey -}}
+{{- $sec := (lookup "v1" "Secret" .Release.Namespace $secName) -}}
+
+S3 / MinIO
+==========
+
+MinIO Console URL: {{- if .Values.s3.minio.consoleIngress.enabled }} http{{ if .Values.s3.minio.consoleIngress.tls }}s{{ end }}://{{ .Values.s3.minio.consoleIngress.host }} {{- else }} (console ingress disabled) {{- end }}
+s3manager URL:     {{- if .Values.s3.s3manager.ingress.enabled }} http{{ if .Values.s3.s3manager.ingress.tls }}s{{ end }}://{{ .Values.s3.s3manager.ingress.host }} {{- else }} (s3manager ingress disabled) {{- end }}
+
+Credentials Secret: {{ $secName }}
+
+{{- if not $sec }}
+⚠ Secret "{{ $secName }}" was NOT found in namespace "{{ .Release.Namespace }}".
+Create it before using MinIO/s3manager:
+
+  kubectl -n {{ .Release.Namespace }} create secret generic {{ $secName }} \
+    --from-literal={{ $ak }}=<ACCESS_KEY> \
+    --from-literal={{ $sk }}=<SECRET_KEY>
+
+Then re-deploy.
+{{- else }}
+✓ Secret "{{ $secName }}" exists.
+{{- end }}
+
+{{- end }}
+
+
+
+
+preflight
+
+
+{{- if and .Values.s3.enabled (or .Values.search.enabled .Values.mtipParser.enabled) -}}
+{{- $secName := .Values.s3.minio.existingSecretName -}}
+{{- $sec := (lookup "v1" "Secret" .Release.Namespace $secName) -}}
+{{- if not $sec -}}
+{{- fail (printf `
+MinIO credentials secret %q not found in namespace %q.
+
+Create it first:
+
+  kubectl -n %s create secret generic %s \
+    --from-literal=%s=<ACCESS_KEY> \
+    --from-literal=%s=<SECRET_KEY>
+
+Then re-run the deploy.
+` $secName .Release.Namespace .Release.Namespace $secName .Values.s3.minio.secretKeys.accessKey .Values.s3.minio.secretKeys.secretKey) -}}
+{{- end -}}
+{{- end -}}
