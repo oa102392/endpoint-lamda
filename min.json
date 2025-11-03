@@ -1,0 +1,154 @@
+{
+    "type": "object",
+    "properties": {
+      "domain": { "type": "string" },
+      "subdomain": { "type": "string" },
+      "oci_registry": { "type": "string" },
+      "aero_proxy": { "type": "boolean" },
+      "imagePullSecret": { "type": "string" },
+  
+      "frontend": {
+        "type": "object",
+        "properties": {
+          "image": { "type": "string" },
+          "tag": { "type": "string" }
+        }
+      },
+  
+      "search": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" }
+        }
+      },
+  
+      "authn": {
+        "type": "string",
+        "enum": ["none", "htpasswd", "app-sec-framework"]
+      },
+  
+      "mtipParser": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" }
+        }
+      },
+  
+      "s3": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "enforceSecret": { "type": "boolean" },
+  
+          "minio": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "image": {
+                "type": "object",
+                "properties": {
+                  "repository": { "type": "string" },
+                  "tag": { "type": "string" },
+                  "pullPolicy": {
+                    "type": "string",
+                    "enum": ["IfNotPresent", "Always", "Never"]
+                  }
+                }
+              },
+              "service": {
+                "type": "object",
+                "properties": {
+                  "apiPort": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                  "consolePort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+                }
+              },
+              "existingSecretName": { "type": "string" },
+              "secretKeys": {
+                "type": "object",
+                "properties": {
+                  "accessKey": { "type": "string" },
+                  "secretKey": { "type": "string" }
+                }
+              },
+              "resources": {
+                "type": "object",
+                "properties": {
+                  "limits": {
+                    "type": "object",
+                    "properties": {
+                      "cpu": { "type": "string" },
+                      "memory": { "type": "string" }
+                    }
+                  },
+                  "requests": {
+                    "type": "object",
+                    "properties": {
+                      "cpu": { "type": "string" },
+                      "memory": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+  
+          "s3manager": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "image": {
+                "type": "object",
+                "properties": {
+                  "repository": { "type": "string" },
+                  "tag": { "type": "string" },
+                  "pullPolicy": {
+                    "type": "string",
+                    "enum": ["IfNotPresent", "Always", "Never"]
+                  }
+                }
+              },
+              "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+              "endpoint": {
+                "type": "object",
+                "properties": {
+                  "host": { "type": "string" },
+                  "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                  "useSSL": { "type": "boolean" }
+                }
+              },
+              "ingress": {
+                "type": "object",
+                "properties": {
+                  "enabled": { "type": "boolean" },
+                  "ingressClassName": { "type": "string" },
+                  "host": { "type": "string" },
+                  "path": { "type": "string" },
+                  "tls": { "type": "boolean" }
+                }
+              },
+              "existingSecretName": { "type": "string" },
+              "secretKeys": {
+                "type": "object",
+                "properties": {
+                  "accessKey": { "type": "string" },
+                  "secretKey": { "type": "string" }
+                }
+              },
+              "resources": {
+                "type": "object",
+                "properties": {
+                  "requests": {
+                    "type": "object",
+                    "properties": {
+                      "cpu": { "type": "string" },
+                      "memory": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
