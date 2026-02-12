@@ -1,0 +1,516 @@
+# intellidoc-stack.yaml
+# Apply with Argo (raw manifests). Safe to kubectl apply -f as well.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: intellidoc
+---
+# --- Secrets (move these to ExternalSecrets if you use that pattern) ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: intellidoc-mongodb-auth
+  namespace: intellidoc
+type: Opaque
+stringData:
+  MONGODB_INITDB_ROOT_USERNAME: root
+  MONGODB_INITDB_ROOT_PASSWORD: "954HlopbOw"   # from your compose; rotate for real use
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: intellidoc-vectorstore-auth
+  namespace: intellidoc
+type: Opaque
+stringData:
+  CHROMA_SERVER_AUTH_CREDENTIALS: "admin:1950_yCkjP15"  # from your compose; rotate for real use
+  VECTORSTORE_PASSWORD: "1950_yCkjP15"
+---
+# --- PVCs ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: intellidoc-shared-data
+  namespace: intellidoc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 20Gi
+  # storageClassName: ""  # optional (use cluster default if omitted)
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: intellidoc-mongodb-data
+  namespace: intellidoc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 20Gi
+  # storageClassName: ""
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: intellidoc-chroma-data
+  namespace: intellidoc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
+  # storageClassName: ""
+---
+# =========================
+# Frontend
+# compose: image intellidoc/front_end
+# ports: "8888:8080"
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intellidoc-frontend
+  namespace: intellidoc
+  labels:
+    app: intellidoc-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intellidoc-frontend
+  template:
+    metadata:
+      labels:
+        app: intellidoc-frontend
+    spec:
+      imagePullSecrets:
+        - name: gitea
+      containers:
+        - name: frontend
+          image: REPLACE_ME/front_end:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            # If your frontend needs an API base URL, keep it stable through ingress.
+            - name: API_BASE_URL
+              value: "https://intellidoc.dev.e3.aero.org/api"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intellidoc-frontend
+  namespace: intellidoc
+spec:
+  selector:
+    app: intellidoc-frontend
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8888
+      targetPort: 8080
+---
+# =========================
+# Backend
+# compose: image intellidoc/back_end
+# ports: "8000:8000"
+# env included in your compose screenshot
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intellidoc-backend
+  namespace: intellidoc
+  labels:
+    app: intellidoc-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intellidoc-backend
+  template:
+    metadata:
+      labels:
+        app: intellidoc-backend
+    spec:
+      imagePullSecrets:
+        - name: gitea
+      containers:
+        - name: backend
+          image: REPLACE_ME/back_end:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            # ---- Neo4j (EXISTING in namespace) ----
+            # Your compose had NEO4J_BASE_URL=http://neo4j:7687 (marked older).
+            # Keep same shape but point to the existing service DNS.
+            - name: NEO4J_BASE_URL
+              value: "http://intellidoc-neo4j-spices.intellidoc.svc.cluster.local:7687"
+            - name: NEO4J_HOST
+              value: "intellidoc-neo4j-spices.intellidoc.svc.cluster.local"
+            - name: NEO4J_PORT
+              value: "7687"
+
+            # If your backend requires username/password, wire them from the existing secret.
+            # NOTE: YOU MUST CONFIRM the secret key names:
+            # kubectl -n intellidoc get secret intellidoc-neo4j-spices-auth -o yaml
+            - name: NEO4J_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: intellidoc-neo4j-spices-auth
+                  key: username
+                  optional: true
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: intellidoc-neo4j-spices-auth
+                  key: password
+                  optional: true
+
+            # ---- Frontend URL (cloud) ----
+            - name: FRONTEND_URL
+              value: "https://intellidoc.dev.e3.aero.org"
+
+            # ---- Redis/Keystore (compose comment: skip port; code assumes 6379 and adds scheme) ----
+            - name: REDIS_HOST
+              value: "intellidoc-keystore"
+
+            # ---- Mongo ----
+            - name: MONGO_HOST
+              value: "intellidoc-mongodb"
+            - name: MONGO_PORT
+              value: "27017"
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: intellidoc-mongodb-auth
+                  key: MONGODB_INITDB_ROOT_PASSWORD
+
+            # ---- Vectorstore (Chroma) ----
+            - name: VECTORSTORE_HOST
+              value: "intellidoc-vectorstore"
+            - name: VECTORSTORE_PORT
+              value: "8000"
+            - name: VECTORSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: intellidoc-vectorstore-auth
+                  key: VECTORSTORE_PASSWORD
+
+            # ---- Parser ----
+            - name: PARSER_HOST
+              value: "intellidoc-parser"
+            - name: PARSER_PORT
+              value: "20501"
+          volumeMounts:
+            - name: shared-data
+              mountPath: /intellidoc_data
+          resources:
+            requests:
+              cpu: 500m
+              memory: 8Gi
+            limits:
+              cpu: "10"
+              memory: 8Gi
+      volumes:
+        - name: shared-data
+          persistentVolumeClaim:
+            claimName: intellidoc-shared-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intellidoc-backend
+  namespace: intellidoc
+spec:
+  selector:
+    app: intellidoc-backend
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+# =========================
+# Parser
+# compose: image intellidoc/parser
+# ports: "20501:20501", "8000:8000"
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intellidoc-parser
+  namespace: intellidoc
+  labels:
+    app: intellidoc-parser
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intellidoc-parser
+  template:
+    metadata:
+      labels:
+        app: intellidoc-parser
+    spec:
+      imagePullSecrets:
+        - name: gitea
+      containers:
+        - name: parser
+          image: REPLACE_ME/parser:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 20501
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intellidoc-parser
+  namespace: intellidoc
+spec:
+  selector:
+    app: intellidoc-parser
+  type: ClusterIP
+  ports:
+    - name: api
+      port: 20501
+      targetPort: 20501
+    - name: ui
+      port: 8000
+      targetPort: 8000
+---
+# =========================
+# Vectorstore (Chroma)
+# compose: image chromadb/chroma
+# env: CHROMA_SERVER_AUTH_ENABLED=true, CHROMA_SERVER_AUTH_CREDENTIALS=admin:1950_yCkjP15
+# ports: "81111:8000" locally -> in cluster expose 8000
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intellidoc-vectorstore
+  namespace: intellidoc
+  labels:
+    app: intellidoc-vectorstore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intellidoc-vectorstore
+  template:
+    metadata:
+      labels:
+        app: intellidoc-vectorstore
+    spec:
+      containers:
+        - name: vectorstore
+          image: chromadb/chroma:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: CHROMA_SERVER_AUTH_ENABLED
+              value: "true"
+            - name: CHROMA_SERVER_AUTH_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: intellidoc-vectorstore-auth
+                  key: CHROMA_SERVER_AUTH_CREDENTIALS
+          volumeMounts:
+            - name: chroma-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+      volumes:
+        - name: chroma-data
+          persistentVolumeClaim:
+            claimName: intellidoc-chroma-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intellidoc-vectorstore
+  namespace: intellidoc
+spec:
+  selector:
+    app: intellidoc-vectorstore
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+# =========================
+# Keystore (Redis/Valkey)
+# compose had valkey/redis/keystore references; safest is a standard valkey.
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intellidoc-keystore
+  namespace: intellidoc
+  labels:
+    app: intellidoc-keystore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intellidoc-keystore
+  template:
+    metadata:
+      labels:
+        app: intellidoc-keystore
+    spec:
+      containers:
+        - name: keystore
+          image: valkey/valkey:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intellidoc-keystore
+  namespace: intellidoc
+spec:
+  selector:
+    app: intellidoc-keystore
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+---
+# =========================
+# MongoDB
+# compose: mongodb/mongodb-community-server:latest
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intellidoc-mongodb
+  namespace: intellidoc
+  labels:
+    app: intellidoc-mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intellidoc-mongodb
+  template:
+    metadata:
+      labels:
+        app: intellidoc-mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongodb/mongodb-community-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGODB_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: intellidoc-mongodb-auth
+                  key: MONGODB_INITDB_ROOT_USERNAME
+            - name: MONGODB_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: intellidoc-mongodb-auth
+                  key: MONGODB_INITDB_ROOT_PASSWORD
+            - name: DISABLE_TELEMETRY
+              value: "true"
+          volumeMounts:
+            - name: mongodb-data
+              mountPath: /data/db
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+      volumes:
+        - name: mongodb-data
+          persistentVolumeClaim:
+            claimName: intellidoc-mongodb-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intellidoc-mongodb
+  namespace: intellidoc
+spec:
+  selector:
+    app: intellidoc-mongodb
+  type: ClusterIP
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
+---
+# =========================
+# Ingress (keep host: intellidoc.dev.e3.aero.org)
+# Routes:
+# - /      -> frontend
+# - /api   -> backend   (optional but usually needed so browser can reach API)
+# =========================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: intellidoc
+  namespace: intellidoc
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+    - host: intellidoc.dev.e3.aero.org
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: intellidoc-backend
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: intellidoc-frontend
+                port:
+                  number: 8888
