@@ -9,3 +9,14 @@ url=f"http://{host}:{port}/api/v1/heartbeat"
 print("Testing:", url)
 print(urlopen(url, timeout=5).read()[:200])
 PY'
+
+
+
+
+kubectl -n api exec deploy/intellidoc-apiv2 -- sh -lc 'python - <<'"'"'PY'"'"'
+import urllib.request
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # ignore env proxies
+url="http://chromadb:8000/api/v1/heartbeat"
+print("Testing direct:", url)
+print(opener.open(url, timeout=5).read()[:200])
+PY'
