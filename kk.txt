@@ -80,3 +80,10 @@ col.add(ids=["smoke-1"], documents=["hello nnsa spices"], metadatas=[{"source":"
 print("count after add:", col.count())
 print("query result:", col.query(query_texts=["hello"], n_results=1))
 PY'
+
+
+kubectl -n api exec deploy/intellidoc-apiv2 -- sh -lc '
+set -e
+echo "DNS:"; getent hosts chromadb.api.svc.cluster.local || true
+echo "Heartbeat v2:"; curl -sS -D- http://chromadb.api.svc.cluster.local:8000/api/v2/heartbeat -o /dev/null
+'
