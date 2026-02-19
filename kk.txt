@@ -1,0 +1,11 @@
+kubectl -n api exec deploy/intellidoc-apiv2 -- sh -lc 'python - <<'"'"'PY'"'"'
+import os
+from urllib.request import urlopen
+
+host=os.getenv("VECTORSTORE_HOST","chromadb")
+host=host.replace("http://","").replace("https://","").strip("/")
+port=os.getenv("VECTORSTORE_PORT","8000")
+url=f"http://{host}:{port}/api/v1/heartbeat"
+print("Testing:", url)
+print(urlopen(url, timeout=5).read()[:200])
+PY'
