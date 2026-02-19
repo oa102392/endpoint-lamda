@@ -20,3 +20,63 @@ url="http://chromadb:8000/api/v1/heartbeat"
 print("Testing direct:", url)
 print(opener.open(url, timeout=5).read()[:200])
 PY'
+
+
+
+kubectl -n api exec deploy/intellidoc-apiv2 -- sh -lc 'python - << "PY"
+import urllib.request, urllib.error
+
+base="http://chromadb:8000"
+paths=[
+  "/", 
+  "/api/v1/heartbeat",
+  "/api/v2/heartbeat",
+  "/api/v1/version",
+  "/api/v2/version",
+  "/openapi.json",
+  "/docs",
+]
+
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # ignore env proxies
+for p in paths:
+  url = base + p
+  try:
+    r = opener.open(url, timeout=5)
+    body = r.read(120)
+    print(f"{p:16} -> {r.status}  {body[:80]!r}")
+  except urllib.error.HTTPError as e:
+    print(f"{p:16} -> HTTP {e.code}")
+  except Exception as e:
+    print(f"{p:16} -> ERR {e}")
+PY'
+
+
+kubectl -n api patch deploy intellidoc-apiv2 --type='json' -p='[
+  {"op":"add","path":"/spec/template/spec/containers/0/env/-","value":{"name":"NO_PROXY","value":"localhost,127.0.0.1,.svc,.svc.cluster.local,chromadb,chromadb.api.svc.cluster.local,intellidoc-neo4j-spices,intellidoc-neo4j-spices.intellidoc.svc.cluster.local"}},
+  {"op":"add","path":"/spec/template/spec/containers/0/env/-","value":{"name":"no_proxy","value":"localhost,127.0.0.1,.svc,.svc.cluster.local,chromadb,chromadb.api.svc.cluster.local,intellidoc-neo4j-spices,intellidoc-neo4j-spices.intellidoc.svc.cluster.local"}}
+]'
+
+
+kubectl -n api exec deploy/intellidoc-apiv2 -- sh -lc 'python - << "PY"
+import os
+
+host=os.getenv("VECTORSTORE_HOST","chromadb").replace("http://","").replace("https://","").strip("/")
+port=int(os.getenv("VECTORSTORE_PORT","8000"))
+
+print("VECTORSTORE_HOST =", host)
+print("VECTORSTORE_PORT =", port)
+
+import chromadb
+client = chromadb.HttpClient(host=host, port=port)
+
+cols = client.list_collections()
+print("collections:", [c.name for c in cols])
+
+col = client.get_or_create_collection("nnsa_spices")
+print("using:", col.name, "count:", col.count())
+
+# smoke test insert + query
+col.add(ids=["smoke-1"], documents=["hello nnsa spices"], metadatas=[{"source":"smoke"}])
+print("count after add:", col.count())
+print("query result:", col.query(query_texts=["hello"], n_results=1))
+PY'
